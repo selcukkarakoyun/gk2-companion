@@ -16,7 +16,7 @@ export const emptyState = (): AppState => ({ version: 2, materials: [], building
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-const PNG_PREFIX = 'data:image/png;base64,';
+export const PNG_PREFIX = 'data:image/png;base64,';
 const cleanArea = (s: string) => s.trim().replace(/\s+/g, ' ');
 
 export function validateState(raw: unknown): AppState | null {

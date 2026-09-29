@@ -31,10 +31,12 @@ export function createDeepSeekProvider(cfg: DeepSeekConfig): ScanProvider {
     }
   }
 
-  async function complete(messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+  async function complete(messages: ChatMessage[], signal?: AbortSignal, fallback?: ChatMessage[]): Promise<string> {
     const base = { model: cfg.model, messages, temperature: 0, stream: false };
     let res = await post({ ...base, response_format: { type: 'json_object' } }, signal);
     if (res.status === 400) res = await post(base, signal);
+    // Reddedilirse (ör. görsel sayısı sınırı) referans ikonlar olmadan son bir kez dene.
+    if (res.status === 400 && fallback) res = await post({ ...base, messages: fallback }, signal);
     if (!res.ok) throw statusError(res.status);
     let data: { choices?: { message?: { content?: unknown } }[] };
     try {
@@ -50,8 +52,12 @@ export function createDeepSeekProvider(cfg: DeepSeekConfig): ScanProvider {
     async scan({ imageDataUrl, knownMaterials, signal }: ScanInput) {
       if (!cfg.apiKey.trim()) throw new ScanError('no-key');
       const messages = buildMessages(imageDataUrl, knownMaterials);
+      const hasReferences = knownMaterials.some((m) => m.icon);
+      const fallback = hasReferences
+        ? buildMessages(imageDataUrl, knownMaterials.map(({ id, name, description }) => ({ id, name, description })))
+        : undefined;
       for (let attempt = 0; attempt < 2; attempt++) {
-        const content = await complete(messages, signal);
+        const content = await complete(messages, signal, fallback);
         try {
           return parseScanResponse(content);
         } catch (e) {

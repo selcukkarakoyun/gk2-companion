@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyDraft, attachIcons, newMaterialForRow, normalizeName, scanToDraft, validateDraft } from './merge';
+import { applyDraft, attachIcons, findBuilding, newMaterialForRow, normalizeName, scanToDraft, usedMaterialIds, validateDraft } from './merge';
 import { bld, idGen, mat, st } from './test-helpers';
 import type { Box, ReviewDraft, ScanResult } from './types';
 
@@ -376,5 +376,82 @@ describe('applyDraft: alan ve ikon', () => {
   it('sonuç v2 durumudur', () => {
     const s0 = st();
     expect(applyDraft(s0, scanToDraft(scan([{ name: 'A', requirements: [nr('Çivi', 1)] }]), s0), idGen()).version).toBe(2);
+  });
+});
+
+describe('ikon önerileri son eşlemeye bağlıdır', () => {
+  const PNG_NEW = 'data:image/png;base64,KERESTE';
+  const two = () => st([mat('m1', 'Tahta'), mat('m2', 'Kereste')]);
+
+  it('satır başka malzemeye çevrilince eski malzemenin önerisi yazılmaz', () => {
+    const s0 = two();
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 1, BOX)] }]), s0);
+    attachIcons(d, s0, () => PNG_NEW);
+    d.buildings[0].requirements[0].materialId = 'm2';
+    const s1 = applyDraft(s0, d, idGen());
+    expect(s1.materials.find((m) => m.id === 'm1')!.icon).toBeUndefined();
+    expect(s1.materials.find((m) => m.id === 'm2')!.icon).toBeUndefined();
+  });
+  it('hariç tutulan yapının önerisi yazılmaz', () => {
+    const s0 = two();
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 1, BOX)] }, { name: 'B', requirements: [kr('m2', 1)] }]), s0);
+    attachIcons(d, s0, () => PNG_NEW);
+    d.buildings[0].include = false;
+    expect(applyDraft(s0, d, idGen()).materials.find((m) => m.id === 'm1')!.icon).toBeUndefined();
+  });
+  it('silinen satırın önerisi yazılmaz', () => {
+    const s0 = two();
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 1, BOX), kr('m2', 2)] }]), s0);
+    attachIcons(d, s0, () => PNG_NEW);
+    d.buildings[0].requirements = d.buildings[0].requirements.filter((r) => r.materialId !== 'm1');
+    expect(applyDraft(s0, d, idGen()).materials.find((m) => m.id === 'm1')!.icon).toBeUndefined();
+  });
+  it('mapTo iptal edilen yeni malzemenin önerisi mevcut malzemeye yazılmaz', () => {
+    const s0 = st([mat('m1', 'Tahta')]);
+    const d = scanToDraft(scan([{ name: 'A', requirements: [nr('tahta', 1, 'd', BOX)] }]), s0);
+    attachIcons(d, s0, () => PNG_NEW);
+    d.newMaterials[0].mapTo = null;
+    d.newMaterials[0].name = 'Kalın Tahta';
+    const s1 = applyDraft(s0, d, idGen());
+    expect(s1.materials.find((m) => m.id === 'm1')!.icon).toBeUndefined();
+  });
+  it('geçerli PNG data URL olmayan ikon yazılmaz (yeni malzeme ve öneri)', () => {
+    const s0 = st([mat('m1', 'Tahta')]);
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 1, BOX), nr('Çivi', 1, 'd', BOX)] }]), s0);
+    attachIcons(d, s0, () => 'data:,');
+    const s1 = applyDraft(s0, d, idGen());
+    expect(s1.materials.every((m) => m.icon === undefined)).toBe(true);
+  });
+  it('usedMaterialIds: dahil satırların doğrudan ve mapTo ile kullanılan malzemelerini verir', () => {
+    const s0 = st([mat('m1', 'Tahta'), mat('m2', 'Kereste')]);
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 1), nr('kereste', 1)] }, { name: 'B', requirements: [nr('Çivi', 1)] }]), s0);
+    d.buildings[1].include = false;
+    expect([...usedMaterialIds(d)].sort()).toEqual(['m1', 'm2']);
+  });
+});
+
+describe('Genel alanındaki eski yapı (v1 göçü) yeni alanda taranınca taşınır', () => {
+  it('aynı adlı yapı kopya açmaz, Genel\'den alana taşınır; qty ve built korunur', () => {
+    const s0 = st([mat('m1', 'Tahta')], [bld('b1', 'Basit Sandık', [['m1', 1]], { qty: 3, built: true })]);
+    const d = scanToDraft(scan([{ name: 'Basit Sandık', requirements: [kr('m1', 4)] }], 'Bahçe'), s0);
+    const s1 = applyDraft(s0, d, idGen());
+    expect(s1.buildings).toHaveLength(1);
+    expect(s1.buildings[0]).toMatchObject({ id: 'b1', area: 'Bahçe', qty: 3, built: true });
+    expect(s1.buildings[0].requirements).toEqual([{ materialId: 'm1', amount: 4 }]);
+  });
+  it('hedef alanda eşleşme varsa Genel\'e dokunmaz', () => {
+    const s0 = st([mat('m1', 'Tahta')], [
+      bld('b1', 'A', [['m1', 1]], { area: 'Genel' }),
+      bld('b2', 'A', [['m1', 1]], { area: 'Bahçe' }),
+    ]);
+    const s1 = applyDraft(s0, scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 9)] }], 'Bahçe'), s0), idGen());
+    expect(s1.buildings.map((b) => `${b.area}:${b.requirements[0].amount}`).sort()).toEqual(['Bahçe:9', 'Genel:1']);
+  });
+  it('findBuilding: önce tam alan eşleşmesi, sonra Genel; Genel taranırken yedek yok', () => {
+    const list = [bld('b1', 'A', [], { area: 'Genel' }), bld('b2', 'A', [], { area: 'Bahçe' })];
+    expect(findBuilding(list, 'Bahçe', 'a')!.id).toBe('b2');
+    expect(findBuilding(list, 'Avlu', 'A')!.id).toBe('b1');
+    expect(findBuilding(list, 'Avlu', 'Yok')).toBeUndefined();
+    expect(findBuilding([bld('b3', 'X', [], { area: 'Bahçe' })], 'Genel', 'X')).toBeUndefined();
   });
 });

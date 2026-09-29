@@ -58,4 +58,11 @@ describe('buildMessages', () => {
     expect(SYSTEM_PROMPT).toMatch(/reference icon/i);
     expect(SYSTEM_PROMPT).toContain('"buildings":[]');
   });
+
+  it('referans ikon sayısı sınırlıdır', () => {
+    const many = Array.from({ length: 45 }, (_, i) => ({ id: `m${i}`, name: `M${i}`, description: '', icon: `data:image/png;base64,I${i}` }));
+    const images = parts(buildMessages(url, many)[1]).filter((x) => x.type === 'image_url');
+    expect(images).toHaveLength(41);
+    expect(images[images.length - 1].image_url!.url).toBe(url);
+  });
 });

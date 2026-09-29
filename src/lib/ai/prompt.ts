@@ -24,10 +24,14 @@ export type ChatMessage = { role: 'system' | 'user'; content: string | ContentPa
 
 type KnownMaterial = Pick<Material, 'id' | 'name' | 'description' | 'icon'>;
 
+/** İstek boyutunu ve görsel sayısı sınırını korumak için gönderilen referans ikon üst sınırı. */
+export const MAX_REFERENCE_ICONS = 40;
+
 export function buildMessages(imageDataUrl: string, knownMaterials: KnownMaterial[]): ChatMessage[] {
   const known = JSON.stringify(knownMaterials.map(({ id, name, description }) => ({ id, name, description })));
   const references = knownMaterials
     .filter((m) => m.icon)
+    .slice(0, MAX_REFERENCE_ICONS)
     .flatMap((m): ContentPart[] => [
       { type: 'text', text: `Reference icon for known material id="${m.id}" name="${m.name}":` },
       { type: 'image_url', image_url: { url: m.icon as string } },

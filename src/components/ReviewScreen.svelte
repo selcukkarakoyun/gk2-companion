@@ -1,6 +1,6 @@
 <script lang="ts">
   import { listAreas } from '../lib/areas';
-  import { newMaterialForRow, normalizeName, validateDraft } from '../lib/merge';
+  import { findBuilding, newMaterialForRow, usedMaterialIds, validateDraft } from '../lib/merge';
   import type {
     AppState,
     Box,
@@ -40,11 +40,10 @@
   );
   const visibleNew = $derived(draft.newMaterials.filter((nm) => usedNewKeys.has(nm.key)));
 
-  const buildingExists = (name: string) => {
-    const n = normalizeName(name);
-    const a = normalizeName(draft.area);
-    return n !== '' && appState.buildings.some((b) => normalizeName(b.name) === n && normalizeName(b.area) === a);
-  };
+  const buildingExists = (name: string) =>
+    name.trim() !== '' && findBuilding(appState.buildings, draft.area, name) !== undefined;
+  const usedIds = $derived(usedMaterialIds(draft));
+  const visibleFills = $derived(draft.iconFills.filter((f) => usedIds.has(f.materialId)));
   const newLabel = (nm: ReviewNewMaterial) => nm.name.trim() || '(adsız yeni malzeme)';
   const rowValue = (r: ReviewRequirement) => (r.materialId ? `m:${r.materialId}` : `n:${r.newKey}`);
   const materialName = (id: string) => appState.materials.find((m) => m.id === id)?.name ?? '?';
@@ -157,11 +156,11 @@
       </div>
     {/if}
 
-    {#if draft.iconFills.length > 0}
+    {#if visibleFills.length > 0}
       <div class="panel-row" data-testid="icon-fills">
         <h3 class="name-gold">İkon önerileri</h3>
         <p class="muted">Bu malzemelerin henüz ikonu yok. Taramadan kesilen ikonu kaydedebilirsin.</p>
-        {#each draft.iconFills as f (f.materialId)}
+        {#each visibleFills as f (f.materialId)}
           <div class="row wrap">
             {#if f.icon}<img class="slot-icon big" src={f.icon} alt="{materialName(f.materialId)} ikon önerisi" />{/if}
             <span class="name-gold">{materialName(f.materialId)}</span>

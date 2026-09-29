@@ -102,4 +102,19 @@ describe('createDeepSeekProvider', () => {
     const fetchImpl = vi.fn().mockImplementation(async () => new Response('<html>', { status: 200 }));
     expect(await code(make(fetchImpl as unknown as typeof fetch).scan(input))).toBe('format');
   });
+
+  it('iki 400 sonrası referans ikonları olmadan üçüncü kez dener', async () => {
+    const withIcons = { ...input, knownMaterials: [{ id: 'm1', name: 'Tahta', description: 'plank', icon: 'data:image/png;base64,ICON' }] };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(respond(400, { error: {} }))
+      .mockResolvedValueOnce(respond(400, { error: {} }))
+      .mockResolvedValueOnce(ok(JSON.stringify(GOOD)));
+    expect(await make(fetchImpl as unknown as typeof fetch).scan(withIcons)).toEqual(GOOD);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    const images = (i: number) =>
+      JSON.parse(fetchImpl.mock.calls[i][1].body).messages[1].content.filter((p: { type: string }) => p.type === 'image_url');
+    expect(images(0)).toHaveLength(2);
+    expect(images(2)).toHaveLength(1);
+  });
 });

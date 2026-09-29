@@ -309,3 +309,57 @@ test('geçersiz ikonlu kayıt bozuk sayılır ve uygulama açılır', async ({ p
   await expect(page.getByText('Kayıtlı veri okunamadı')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'GK2 Companion' })).toBeVisible();
 });
+
+test('v1 göçünden kalan Genel yapısı, aynı adlı yapı taranınca alana taşınır (toplam iki katına çıkmaz)', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('gk2c.state')) {
+      localStorage.setItem(
+        'gk2c.state',
+        JSON.stringify({
+          version: 1,
+          materials: [{ id: 'm1', name: 'Tahta', description: 'plank' }],
+          buildings: [{ id: 'b1', name: 'Basit Sandık', qty: 2, built: false, requirements: [{ materialId: 'm1', amount: 4 }] }],
+        }),
+      );
+    }
+  });
+  await page.goto('/');
+  current = { area: 'Bahçe', buildings: [{ name: 'Basit Sandık', requirements: [TAHTA(4)] }] };
+  await scanSample(page, 1);
+  await expect(page.getByText('Mevcut kayıt güncellenecek')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Listeye ekle' }).click();
+
+  await expect(page.locator('article.building')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Toplam' }).click();
+  await expectTotal(page, 'Tahta', 8);
+  const state = await stateOf(page);
+  expect(state.buildings).toHaveLength(1);
+  expect(state.buildings[0]).toMatchObject({ id: 'b1', area: 'Bahçe', qty: 2 });
+});
+
+test('satırı başka malzemeye çevirince eski malzemeye yanlış ikon yazılmaz', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('gk2c.state')) {
+      localStorage.setItem(
+        'gk2c.state',
+        JSON.stringify({
+          version: 2,
+          materials: [
+            { id: 'm1', name: 'Tahta', description: 'plank' },
+            { id: 'm2', name: 'Kereste', description: 'log' },
+          ],
+          buildings: [],
+        }),
+      );
+    }
+  });
+  await page.goto('/');
+  current = { area: 'Bahçe', buildings: [{ name: 'A', requirements: [{ materialId: 'm1', suggestedName: null, description: null, amount: 2, box: BOX }] }] };
+  await scanSample(page, 1);
+  await expect(page.getByTestId('icon-fills')).toBeVisible();
+  await page.getByTestId('review-building').first().getByLabel('Malzeme', { exact: true }).selectOption({ label: 'Kereste' });
+  await expect(page.getByTestId('icon-fills')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Listeye ekle' }).click();
+  const materials = (await stateOf(page)).materials as { id: string; icon?: string }[];
+  expect(materials.every((m) => m.icon === undefined)).toBe(true);
+});

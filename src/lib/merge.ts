@@ -10,9 +10,38 @@ import type {
   ReviewRequirement,
   ScanResult,
 } from './types';
+import { DEFAULT_AREA, PNG_PREFIX } from './storage';
 
 export function normalizeName(s: string): string {
   return s.trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr');
+}
+
+/** Taslakta dahil edilen satırların (doğrudan veya mapTo ile) kullandığı mevcut malzeme kimlikleri. */
+export function usedMaterialIds(draft: ReviewDraft): Set<string> {
+  const ids = new Set<string>();
+  const newByKey = new Map(draft.newMaterials.map((n) => [n.key, n]));
+  for (const b of draft.buildings) {
+    if (!b.include) continue;
+    for (const r of b.requirements) {
+      if (r.materialId) ids.add(r.materialId);
+      else if (r.newKey) {
+        const nm = newByKey.get(r.newKey);
+        if (nm?.mapTo) ids.add(nm.mapTo);
+      }
+    }
+  }
+  return ids;
+}
+
+/** Önce tam alan+ad eşleşmesi; yoksa (v1 göçünden kalan) "Genel" alanındaki aynı adlı yapı. */
+export function findBuilding(buildings: Building[], area: string, name: string): Building | undefined {
+  const n = normalizeName(name);
+  const a = normalizeName(area);
+  const exact = buildings.find((b) => normalizeName(b.area) === a && normalizeName(b.name) === n);
+  if (exact) return exact;
+  const g = normalizeName(DEFAULT_AREA);
+  if (a === g) return undefined;
+  return buildings.find((b) => normalizeName(b.area) === g && normalizeName(b.name) === n);
 }
 
 const cleanArea = (s: string) => s.trim().replace(/\s+/g, ' ');
@@ -176,7 +205,7 @@ export function applyDraft(state: AppState, draft: ReviewDraft, newId: () => str
         id,
         name: nm.name.trim(),
         description: nm.description.trim(),
-        ...(nm.icon ? { icon: nm.icon } : {}),
+        ...(nm.icon && nm.icon.startsWith(PNG_PREFIX) ? { icon: nm.icon } : {}),
       });
     }
     resolved.set(key, id);
@@ -191,12 +220,10 @@ export function applyDraft(state: AppState, draft: ReviewDraft, newId: () => str
       merged.set(materialId, (merged.get(materialId) ?? 0) + r.amount);
     }
     const requirements: Requirement[] = [...merged].map(([materialId, amount]) => ({ materialId, amount }));
-    const norm = normalizeName(rb.name);
-    const existing = buildings.find(
-      (b) => normalizeName(b.area) === normalizeName(areaName) && normalizeName(b.name) === norm,
-    );
+    const existing = findBuilding(buildings, areaName, rb.name);
     if (existing) {
       existing.requirements = requirements;
+      existing.area = areaName;
     } else {
       buildings.push({
         id: newId(),
@@ -209,8 +236,10 @@ export function applyDraft(state: AppState, draft: ReviewDraft, newId: () => str
     }
   }
 
+  const used = usedMaterialIds(draft);
   for (const fill of draft.iconFills) {
-    if (!fill.accept || !fill.icon) continue;
+    if (!used.has(fill.materialId)) continue;
+    if (!fill.accept || !fill.icon || !fill.icon.startsWith(PNG_PREFIX)) continue;
     const target = materials.find((m) => m.id === fill.materialId);
     if (target && !target.icon) target.icon = fill.icon;
   }
