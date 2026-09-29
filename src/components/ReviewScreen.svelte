@@ -61,7 +61,7 @@
               value={nm.mapTo ?? ''}
               onchange={(e) => (nm.mapTo = e.currentTarget.value || null)}
             >
-              <option value="">Yeni malzeme olarak ekle</option>
+              <option value="">Yeni malzeme</option>
               {#each appState.materials as m (m.id)}
                 <option value={m.id}>Eşleştir: {m.name}</option>
               {/each}
