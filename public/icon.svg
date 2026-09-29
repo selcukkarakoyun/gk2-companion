@@ -1,6 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#14110f"/>
-  <path d="M156 400V232a100 100 0 0 1 200 0v168z" fill="#2a231d" stroke="#c9a24b" stroke-width="14" stroke-linejoin="round"/>
-  <path d="M256 190v120M212 232h88" stroke="#c9a24b" stroke-width="18" stroke-linecap="round"/>
-  <path d="M120 400h272" stroke="#c9a24b" stroke-width="14" stroke-linecap="round"/>
+  <defs>
+    <pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="2"/>
+    </pattern>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b84ea"/><stop offset="1" stop-color="#2e5dbf"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0d1411"/>
+  <rect x="64" y="64" width="384" height="384" rx="24" fill="url(#b)" stroke="#9cc0ff" stroke-width="16"/>
+  <rect x="64" y="64" width="384" height="384" rx="24" fill="url(#g)"/>
+  <rect x="80" y="80" width="352" height="352" rx="14" fill="none" stroke="#264c99" stroke-width="10"/>
+  <g fill="none" stroke="#eaf3ff" stroke-width="26" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M136 268 256 160l120 108"/>
+    <path d="M168 252v138h176V252"/>
+    <path d="M232 390V310h48v80"/>
+  </g>
 </svg>

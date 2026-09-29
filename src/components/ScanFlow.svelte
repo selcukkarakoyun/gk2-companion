@@ -92,35 +92,42 @@
 
 <div class="overlay" role="dialog" aria-modal="true" aria-label="Tarama">
   <div class="overlay-inner">
-    {#if step.kind === 'loading'}
-      <p class="center">Görsel açılıyor…</p>
-    {:else if step.kind === 'edit' && bitmap}
+    {#if step.kind === 'edit' && bitmap}
       <ImageEditor {bitmap} oncancel={onclose} oncontinue={onContinue} />
-    {:else if step.kind === 'scanning'}
-      <div class="center" role="status">
-        <div class="spinner"></div>
-        <p>Yapay zeka görseli okuyor…</p>
-      </div>
-      <button onclick={cancelScanning}>Vazgeç</button>
-    {:else if step.kind === 'empty'}
-      <p class="notice">Yapı bulunamadı, daha net çek.</p>
-      <div class="row wrap">
-        <button class="primary" onclick={() => (step = { kind: 'edit' })}>Görseli düzenle</button>
-        <button onclick={onclose}>Kapat</button>
-      </div>
-    {:else if step.kind === 'error'}
-      <p class="notice error" role="alert">{step.message}</p>
-      <div class="row wrap">
-        {#if step.code === 'no-key' || step.code === 'auth'}
-          <button class="primary" onclick={onopensettings}>Ayarlara git</button>
-        {:else if imageDataUrl}
-          <button class="primary" onclick={runScan}>Tekrar dene</button>
-        {/if}
-        {#if bitmap}<button onclick={() => (step = { kind: 'edit' })}>Görseli düzenle</button>{/if}
-        <button onclick={onclose}>Kapat</button>
-      </div>
     {:else if step.kind === 'review'}
       <ReviewScreen bind:draft appState={store.state} onconfirm={confirmDraft} oncancel={onclose} />
+    {:else}
+      <section class="window">
+        <header class="titlebar"><h2>Tarama</h2></header>
+        <div class="window-body">
+          {#if step.kind === 'loading'}
+            <p class="center">Görsel açılıyor…</p>
+          {:else if step.kind === 'scanning'}
+            <div class="center" role="status">
+              <div class="spinner"></div>
+              <p>Yapay zeka görseli okuyor…</p>
+            </div>
+            <button onclick={cancelScanning}>Vazgeç</button>
+          {:else if step.kind === 'empty'}
+            <p class="notice">Yapı bulunamadı, daha net çek.</p>
+            <div class="row wrap">
+              <button class="primary" onclick={() => (step = { kind: 'edit' })}>Görseli düzenle</button>
+              <button onclick={onclose}>Kapat</button>
+            </div>
+          {:else if step.kind === 'error'}
+            <p class="notice error" role="alert">{step.message}</p>
+            <div class="row wrap">
+              {#if step.code === 'no-key' || step.code === 'auth'}
+                <button class="primary" onclick={onopensettings}>Ayarlara git</button>
+              {:else if imageDataUrl}
+                <button class="primary" onclick={runScan}>Tekrar dene</button>
+              {/if}
+              {#if bitmap}<button onclick={() => (step = { kind: 'edit' })}>Görseli düzenle</button>{/if}
+              <button onclick={onclose}>Kapat</button>
+            </div>
+          {/if}
+        </div>
+      </section>
     {/if}
   </div>
 </div>

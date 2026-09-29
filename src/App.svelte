@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlueprintIcon from './components/BlueprintIcon.svelte';
   import BuildingsView from './components/BuildingsView.svelte';
   import ScanFlow from './components/ScanFlow.svelte';
   import SettingsView from './components/SettingsView.svelte';
@@ -12,7 +13,10 @@
 </script>
 
 <div class="container shell">
-  <header><h1>GK2 Companion</h1></header>
+  <header class="brand">
+    <BlueprintIcon />
+    <h1>GK2 Companion</h1>
+  </header>
   <Tabs bind:tab />
   <main>
     {#if store.corrupt}

@@ -15,8 +15,8 @@ export default defineConfig({
         description: 'Graveyard Keeper 2 inşa malzemesi takipçisi',
         lang: 'tr',
         display: 'standalone',
-        background_color: '#14110f',
-        theme_color: '#14110f',
+        background_color: '#0d1411',
+        theme_color: '#0d1411',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -25,7 +25,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         navigateFallback: 'index.html',
       },
     }),

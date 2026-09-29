@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../lib/state.svelte';
   import type { Building } from '../lib/types';
+  import BlueprintIcon from './BlueprintIcon.svelte';
 
   let { building }: { building: Building } = $props();
 
@@ -11,15 +12,19 @@
   }
 </script>
 
-<article class={['card', 'building', { done: building.built }]}>
-  <header class="row between">
-    <h3>{building.name}</h3>
+<article class={['panel-row', 'building', { done: building.built }]}>
+  <header class="row">
+    <BlueprintIcon />
+    <h3 class={['grow', building.built ? 'name-dim' : 'name-gold']}>{building.name}</h3>
     <button class="danger" onclick={remove}>Sil</button>
   </header>
-  <ul class="chips">
+  <ul class="slots">
     {#each building.requirements as r (r.materialId)}
-      <li class="chip">
-        {nameOf(r.materialId)} ×{r.amount}{building.qty > 1 ? ` (${r.amount * building.qty})` : ''}
+      <li class="slot">
+        <span class="slot-name">{nameOf(r.materialId)}</span>
+        <span class="slot-count">
+          ×{r.amount}{#if building.qty > 1}<small>= {r.amount * building.qty}</small>{/if}
+        </span>
       </li>
     {/each}
   </ul>
@@ -42,5 +47,5 @@
 </article>
 
 <style>
-  .done { opacity: 0.55; }
+  .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 </style>
