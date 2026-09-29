@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { normalizeName, validateDraft } from '../lib/merge';
+  import { newMaterialForRow, normalizeName, validateDraft } from '../lib/merge';
   import type { AppState, ReviewBuilding, ReviewDraft, ReviewNewMaterial, ReviewRequirement } from '../lib/types';
 
   let {
@@ -29,7 +29,9 @@
   const rowValue = (r: ReviewRequirement) => (r.materialId ? `m:${r.materialId}` : `n:${r.newKey}`);
 
   function setRowMaterial(r: ReviewRequirement, value: string) {
-    if (value.startsWith('m:')) {
+    if (value === 'new') {
+      newMaterialForRow(draft, r.key);
+    } else if (value.startsWith('m:')) {
       r.materialId = value.slice(2);
       r.newKey = null;
     } else {
@@ -102,6 +104,7 @@
                   {/each}
                 </optgroup>
               {/if}
+              <option value="new">+ Yeni malzeme</option>
             </select>
             <input class="amount" type="number" min="1" step="1" aria-label="Miktar" bind:value={r.amount} />
             <button class="danger" aria-label="Satırı sil" onclick={() => removeRow(b, r)}>Sil</button>

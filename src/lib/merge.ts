@@ -49,6 +49,19 @@ export function scanToDraft(scan: ScanResult, state: AppState): ReviewDraft {
   return { buildings, newMaterials };
 }
 
+/** Satırı, adı boş (kullanıcının dolduracağı) yeni bir malzemeye bağlar. Bilinmeyen satırda taslağa dokunmaz. */
+export function newMaterialForRow(draft: ReviewDraft, rowKey: string): void {
+  const row = draft.buildings.flatMap((b) => b.requirements).find((r) => r.key === rowKey);
+  if (!row) return;
+  const taken = new Set(draft.newMaterials.map((m) => m.key));
+  let i = draft.newMaterials.length + 1;
+  while (taken.has(`u${i}`)) i++;
+  const key = `u${i}`;
+  draft.newMaterials.push({ key, name: '', description: '', mapTo: null });
+  row.materialId = null;
+  row.newKey = key;
+}
+
 export function validateDraft(draft: ReviewDraft, state: AppState): string | null {
   const included = draft.buildings.filter((b) => b.include);
   if (included.length === 0) return 'Eklenecek yapı yok.';

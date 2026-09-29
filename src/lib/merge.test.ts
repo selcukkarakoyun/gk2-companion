@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyDraft, normalizeName, scanToDraft, validateDraft } from './merge';
+import { applyDraft, newMaterialForRow, normalizeName, scanToDraft, validateDraft } from './merge';
 import { bld, idGen, mat, st } from './test-helpers';
 import type { ReviewDraft, ScanResult } from './types';
 
@@ -62,6 +62,43 @@ describe('scanToDraft', () => {
   it('önerilen isim mevcut bir malzemeyle aynıysa otomatik eşleştirir', () => {
     const d = scanToDraft(scan([{ name: 'A', requirements: [nr('tahta', 1)] }]), st([mat('m1', 'Tahta')]));
     expect(d.newMaterials[0].mapTo).toBe('m1');
+  });
+});
+
+describe('newMaterialForRow', () => {
+  it('satırı boş adlı yeni bir malzemeye bağlar', () => {
+    const s0 = st([mat('m1', 'Tahta')]);
+    const d = scanToDraft(scan([{ name: 'A', requirements: [kr('m1', 2)] }]), s0);
+    const rowKey = d.buildings[0].requirements[0].key;
+    newMaterialForRow(d, rowKey);
+    const r = d.buildings[0].requirements[0];
+    expect(r.materialId).toBeNull();
+    expect(d.newMaterials).toHaveLength(1);
+    expect(r.newKey).toBe(d.newMaterials[0].key);
+    expect(d.newMaterials[0]).toMatchObject({ name: '', description: '', mapTo: null });
+    expect(validateDraft(d, s0)).toMatch(/boş/);
+  });
+
+  it('aynı adla birleşmiş iki satırdan birini ayırabilir', () => {
+    const s0 = st();
+    const d = scanToDraft(scan([{ name: 'A', requirements: [nr('Tahta', 1)] }, { name: 'B', requirements: [nr('Tahta', 2)] }]), s0);
+    expect(d.newMaterials).toHaveLength(1);
+    newMaterialForRow(d, d.buildings[1].requirements[0].key);
+    d.newMaterials[1].name = 'Kereste';
+    expect(validateDraft(d, s0)).toBeNull();
+    const s1 = applyDraft(s0, d, idGen());
+    expect(s1.materials.map((m) => m.name).sort()).toEqual(['Kereste', 'Tahta']);
+  });
+
+  it('anahtarlar çakışmaz ve bilinmeyen satırda taslağa dokunmaz', () => {
+    const s0 = st();
+    const d = scanToDraft(scan([{ name: 'A', requirements: [nr('Tahta', 1), nr('Çivi', 1)] }]), s0);
+    newMaterialForRow(d, d.buildings[0].requirements[0].key);
+    newMaterialForRow(d, d.buildings[0].requirements[1].key);
+    expect(new Set(d.newMaterials.map((m) => m.key)).size).toBe(d.newMaterials.length);
+    const before = JSON.stringify(d);
+    newMaterialForRow(d, 'yok');
+    expect(JSON.stringify(d)).toBe(before);
   });
 });
 

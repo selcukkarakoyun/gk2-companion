@@ -55,19 +55,46 @@ describe('parseScanResponse', () => {
     expect(r.buildings[0].requirements[0].materialId).toBeNull();
   });
 
-  it.each([0, -2, 1.5, '0', 'dört', null])('geçersiz miktarı reddeder (%s)', (amount) => {
-    const text = JSON.stringify({ buildings: [{ name: 'A', requirements: [{ materialId: 'm', amount }] }] });
-    expect(() => parseScanResponse(text)).toThrow(ScanFormatError);
+  it.each([0, -2, 1.5, '0', 'dört', null])('geçersiz miktar tüm cevabı atmaz, NaN olur (%s)', (amount) => {
+    const text = JSON.stringify({
+      buildings: [
+        { name: 'A', requirements: [{ materialId: 'm', amount }, { materialId: 'm2', amount: 3 }] },
+        { name: 'B', requirements: [{ materialId: 'm', amount: 1 }] },
+      ],
+    });
+    const r = parseScanResponse(text);
+    expect(r.buildings).toHaveLength(2);
+    expect(r.buildings[0].requirements[0].amount).toBeNaN();
+    expect(r.buildings[0].requirements[1].amount).toBe(3);
   });
 
-  it('id ve isim ikisi de yoksa reddeder', () => {
+  it.each([['21/4', 4], ['0/6', 6], [' 21 / 8 ', 8]])('sahip/gereken biçimini (%s) gereken sayıya çevirir', (amount, expected) => {
+    const r = parseScanResponse(JSON.stringify({ buildings: [{ name: 'A', requirements: [{ materialId: 'm', amount }] }] }));
+    expect(r.buildings[0].requirements[0].amount).toBe(expected);
+  });
+
+  it('id ve isim ikisi de yoksa satırı korur', () => {
     const text = JSON.stringify({ buildings: [{ name: 'A', requirements: [{ materialId: null, amount: 1 }] }] });
-    expect(() => parseScanResponse(text)).toThrow(ScanFormatError);
+    expect(parseScanResponse(text).buildings[0].requirements[0]).toEqual({
+      materialId: null,
+      suggestedName: null,
+      description: null,
+      amount: 1,
+    });
   });
 
-  it('boş yapı adını reddeder', () => {
-    const text = JSON.stringify({ buildings: [{ name: ' ', requirements: [] }] });
-    expect(() => parseScanResponse(text)).toThrow(ScanFormatError);
+  it('boş yapı adını korur (inceleme ekranında düzeltilir)', () => {
+    const r = parseScanResponse(JSON.stringify({ buildings: [{ name: ' ', requirements: [] }] }));
+    expect(r.buildings[0].name).toBe('');
+  });
+
+  it('requirements eksikse boş dizi sayar', () => {
+    const r = parseScanResponse('{"buildings":[{"name":"A"}]}');
+    expect(r.buildings[0].requirements).toEqual([]);
+  });
+
+  it('yapı nesne değilse hâlâ reddeder', () => {
+    expect(() => parseScanResponse('{"buildings":["A"]}')).toThrow(ScanFormatError);
   });
 
   it.each(['', 'sadece yazı', '{bozuk', '{"buildings": "yok"}', '[]', '{"x":1}'])('geçersiz cevabı reddeder (%s)', (text) => {

@@ -125,3 +125,16 @@ test('API anahtarı yokken tarama Ayarlar yönlendirmesi gösterir', async ({ pa
   await page.getByRole('button', { name: 'Ayarlara git' }).click();
   await expect(page.getByLabel('DeepSeek API anahtarı')).toBeVisible();
 });
+
+test('inceleme ekranında satırı yeni malzemeye çevirmek ayrı malzeme oluşturur', async ({ page }) => {
+  await page.goto('/');
+  await scanSample(page);
+  const card = page.getByTestId('review-building').first();
+  await card.getByLabel('Malzeme', { exact: true }).first().selectOption({ label: '+ Yeni malzeme' });
+  await expect(page.getByRole('alert')).toContainText('boş');
+  await expect(page.getByRole('button', { name: 'Listeye ekle' })).toBeDisabled();
+  await page.getByLabel('Yeni malzeme adı').last().fill('Kalın Tahta');
+  await page.getByRole('button', { name: 'Listeye ekle' }).click();
+  const materialCount = await page.evaluate(() => JSON.parse(localStorage.getItem('gk2c.state')!).materials.length);
+  expect(materialCount).toBe(5);
+});

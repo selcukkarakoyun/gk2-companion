@@ -24,12 +24,15 @@ function optString(v: unknown): string | null {
   return t;
 }
 
+/** Geçersiz miktar NaN olur: cevabın geri kalanı korunur, inceleme ekranı düzeltilene kadar onayı engeller. */
 function toAmount(v: unknown): number {
-  const n = typeof v === 'string' && /^\s*\d+\s*$/.test(v) ? Number(v) : v;
-  if (typeof n !== 'number' || !Number.isInteger(n) || n < 1) {
-    throw new ScanFormatError(`Geçersiz miktar: ${JSON.stringify(v)}`);
+  let n: unknown = v;
+  if (typeof v === 'string') {
+    // "21/4" (sahip/gereken) gelirse yalnızca gereken kısmı al.
+    const m = v.match(/^\s*(?:\d+\s*\/\s*)?(\d+)\s*$/);
+    n = m ? Number(m[1]) : Number.NaN;
   }
-  return n;
+  return typeof n === 'number' && Number.isInteger(n) && n >= 1 ? n : Number.NaN;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -37,18 +40,19 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 
 function parseRequirement(raw: unknown): ScannedRequirement {
   if (!isObj(raw)) throw new ScanFormatError('Malzeme satırı nesne değil.');
-  const materialId = optString(raw.materialId);
-  const suggestedName = optString(raw.suggestedName);
-  if (!materialId && !suggestedName) throw new ScanFormatError("Malzeme id'si veya adı yok.");
-  return { materialId, suggestedName, description: optString(raw.description), amount: toAmount(raw.amount) };
+  return {
+    materialId: optString(raw.materialId),
+    suggestedName: optString(raw.suggestedName),
+    description: optString(raw.description),
+    amount: toAmount(raw.amount),
+  };
 }
 
 function parseBuilding(raw: unknown): ScannedBuilding {
   if (!isObj(raw)) throw new ScanFormatError('Yapı nesne değil.');
   const name = typeof raw.name === 'string' ? raw.name.trim() : '';
-  if (!name) throw new ScanFormatError('Yapı adı boş.');
-  if (!Array.isArray(raw.requirements)) throw new ScanFormatError('"requirements" dizisi yok.');
-  return { name, requirements: raw.requirements.map(parseRequirement) };
+  const requirements = Array.isArray(raw.requirements) ? raw.requirements.map(parseRequirement) : [];
+  return { name, requirements };
 }
 
 export function parseScanResponse(text: string): ScanResult {

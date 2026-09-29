@@ -29,22 +29,29 @@ export function validateState(raw: unknown): AppState | null {
     materials.push({ id: m.id, name: m.name, description: typeof m.description === 'string' ? m.description : '' });
   }
   const buildings: Building[] = [];
+  const buildingIds = new Set<string>();
   for (const b of raw.buildings) {
     if (!isObj(b) || typeof b.id !== 'string' || typeof b.name !== 'string' || !Array.isArray(b.requirements)) {
       return null;
     }
     if (!Number.isInteger(b.qty) || (b.qty as number) < 1 || typeof b.built !== 'boolean') return null;
+    // Arayüz yapıları id ile, malzeme satırlarını materialId ile anahtarlar; yinelenen anahtar çizimi çökertir.
+    if (buildingIds.has(b.id)) return null;
+    buildingIds.add(b.id);
     const requirements: Requirement[] = [];
+    const usedMaterials = new Set<string>();
     for (const r of b.requirements) {
       if (
         !isObj(r) ||
         typeof r.materialId !== 'string' ||
         !ids.has(r.materialId) ||
+        usedMaterials.has(r.materialId) ||
         !Number.isInteger(r.amount) ||
         (r.amount as number) < 1
       ) {
         return null;
       }
+      usedMaterials.add(r.materialId);
       requirements.push({ materialId: r.materialId, amount: r.amount as number });
     }
     buildings.push({ id: b.id, name: b.name, qty: b.qty as number, built: b.built, requirements });

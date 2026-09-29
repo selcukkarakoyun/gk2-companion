@@ -53,6 +53,8 @@ describe('validateState', () => {
     ['amount 0', { version: 1, materials: [mat('m1', 'T')], buildings: [bld('b', 'A', [['m1', 0]])] }],
     ['var olmayan malzeme', { version: 1, materials: [], buildings: [bld('b', 'A', [['m1', 1]])] }],
     ['tekrarlı malzeme id', { version: 1, materials: [mat('m1', 'T'), mat('m1', 'U')], buildings: [] }],
+    ['tekrarlı yapı id', { version: 1, materials: [mat('m1', 'T')], buildings: [bld('b', 'A', [['m1', 1]]), bld('b', 'B', [['m1', 1]])] }],
+    ['aynı malzeme bir yapıda iki satır', { version: 1, materials: [mat('m1', 'T')], buildings: [bld('b', 'A', [['m1', 1], ['m1', 2]])] }],
   ])('geçersiz durumu reddeder: %s', (_name, raw) => {
     expect(validateState(raw)).toBeNull();
   });
