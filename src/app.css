@@ -280,3 +280,17 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
+/* ---------- ikonlar ve alan kırılımı ---------- */
+.slot-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.slot .slot-icon { margin-bottom: 2px; }
+.slot-icon.big { width: 56px; height: 56px; }
+.areas { display: grid; gap: 2px; padding: 2px 0 0 4px; }
+.areas li { font-size: 1.15rem; color: var(--text); }
+.areas li::before { content: '– '; color: var(--muted); }

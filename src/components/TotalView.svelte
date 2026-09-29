@@ -54,17 +54,25 @@
               </div>
             {:else}
               <div class="row between">
-                <details>
-                  <summary>
-                    <span class="name name-gold">{t.material.name}</span>
-                    <span class="slot big"><span class="slot-count">{t.total}</span></span>
-                  </summary>
-                  <ul class="sources">
-                    {#each t.sources as s (s.buildingId)}
-                      <li class="muted">{s.buildingName}: {s.amount}</li>
+                <div class="grow">
+                  <details>
+                    <summary>
+                      {#if t.material.icon}<img class="slot-icon" src={t.material.icon} alt="" />{/if}
+                      <span class="name name-gold">{t.material.name}</span>
+                      <span class="slot big"><span class="slot-count">{t.total}</span></span>
+                    </summary>
+                    <ul class="sources">
+                      {#each t.sources as s (s.buildingId)}
+                        <li class="muted">{s.area} · {s.buildingName}: {s.amount}</li>
+                      {/each}
+                    </ul>
+                  </details>
+                  <ul class="areas">
+                    {#each t.byArea as a (a.area)}
+                      <li>{a.area} = {a.amount}</li>
                     {/each}
                   </ul>
-                </details>
+                </div>
                 <button
                   class="icon edit"
                   aria-label="{t.material.name} adını düzenle"
@@ -81,7 +89,7 @@
 
 <style>
   .rows { display: grid; gap: 8px; }
-  details { flex: 1; min-width: 0; }
+  .grow { flex: 1; min-width: 0; }
   summary {
     display: flex;
     justify-content: space-between;
@@ -90,6 +98,7 @@
     min-height: 48px;
     cursor: pointer;
   }
+  summary .name { flex: 1; }
   .sources { padding: 4px 0 4px 12px; display: grid; gap: 2px; }
   .edit { font-size: 0.95rem; padding: 0.35rem 0.7rem; }
 </style>

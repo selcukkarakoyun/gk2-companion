@@ -5,7 +5,7 @@
 
   let { building }: { building: Building } = $props();
 
-  const nameOf = (id: string) => store.state.materials.find((m) => m.id === id)?.name ?? '?';
+  const materialOf = (id: string) => store.state.materials.find((m) => m.id === id);
 
   function remove() {
     if (confirm(`"${building.name}" silinsin mi?`)) store.deleteBuilding(building.id);
@@ -20,8 +20,10 @@
   </header>
   <ul class="slots">
     {#each building.requirements as r (r.materialId)}
+      {@const m = materialOf(r.materialId)}
       <li class="slot">
-        <span class="slot-name">{nameOf(r.materialId)}</span>
+        {#if m?.icon}<img class="slot-icon" src={m.icon} alt="" />{/if}
+        <span class="slot-name">{m?.name ?? '?'}</span>
         <span class="slot-count">
           ×{r.amount}{#if building.qty > 1}<small>= {r.amount * building.qty}</small>{/if}
         </span>

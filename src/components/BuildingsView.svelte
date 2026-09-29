@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { groupByArea } from '../lib/areas';
   import { store } from '../lib/state.svelte';
   import BuildingCard from './BuildingCard.svelte';
   import ScanButton from './ScanButton.svelte';
 
   let { onscan }: { onscan: (file: File) => void } = $props();
 
-  const pending = $derived(store.state.buildings.filter((b) => !b.built));
-  const done = $derived(store.state.buildings.filter((b) => b.built));
+  const groups = $derived(groupByArea(store.state.buildings));
 </script>
 
 <section class="window">
@@ -26,15 +26,11 @@
       <p class="muted center">Henüz yapı yok. İnşa menüsünün ekran görüntüsünü veya fotoğrafını tara.</p>
     {/if}
 
-    {#each pending as building (building.id)}
-      <BuildingCard {building} />
-    {/each}
-
-    {#if done.length > 0}
-      <h2 class="divider">Yapıldı</h2>
-      {#each done as building (building.id)}
+    {#each groups as group (group.area)}
+      <h2 class="divider">{group.area}</h2>
+      {#each group.buildings as building (building.id)}
         <BuildingCard {building} />
       {/each}
-    {/if}
+    {/each}
   </div>
 </section>
