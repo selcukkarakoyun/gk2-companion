@@ -1,3 +1,5 @@
+import type { Box } from './types';
+
 export type Rotation = 0 | 90 | 180 | 270;
 export type View = { zoom: number; cx: number; cy: number };
 export type Rect = { x: number; y: number; w: number; h: number };
@@ -68,4 +70,28 @@ export function rotationTransform(rot: Rotation, w: number, h: number): { tx: nu
     default:
       return { tx: 0, ty: 0, angle: 0 };
   }
+}
+
+export const ICON_MAX = 64;
+
+export function boxToRect(box: Box, imgW: number, imgH: number): Rect {
+  const x = Math.min(Math.max(0, Math.round(box.x * imgW)), imgW - 1);
+  const y = Math.min(Math.max(0, Math.round(box.y * imgH)), imgH - 1);
+  const w = Math.max(1, Math.min(Math.round(box.w * imgW), imgW - x));
+  const h = Math.max(1, Math.min(Math.round(box.h * imgH), imgH - y));
+  return { x, y, w, h };
+}
+
+export function iconSize(w: number, h: number, max = ICON_MAX): { w: number; h: number } {
+  const scale = Math.min(1, max / Math.max(w, h));
+  return { w: Math.max(1, Math.round(w * scale)), h: Math.max(1, Math.round(h * scale)) };
+}
+
+export function boxFromPoints(ax: number, ay: number, bx: number, by: number): Box {
+  const c = (n: number) => Math.min(1, Math.max(0, n));
+  const x0 = c(Math.min(ax, bx));
+  const y0 = c(Math.min(ay, by));
+  const x1 = c(Math.max(ax, bx));
+  const y1 = c(Math.max(ay, by));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
