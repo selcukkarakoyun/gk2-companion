@@ -32,7 +32,7 @@ export class ScanError extends Error {
 
 export type ScanInput = {
   imageDataUrl: string;
-  knownMaterials: Pick<Material, 'id' | 'name' | 'description'>[];
+  knownMaterials: Pick<Material, 'id' | 'name' | 'description' | 'icon'>[];
   signal?: AbortSignal;
 };
 

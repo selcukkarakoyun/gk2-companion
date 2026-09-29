@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createDeepSeekProvider } from './deepseek';
 import { ScanError } from './provider';
 
-const GOOD = { buildings: [{ name: 'A', requirements: [{ materialId: 'm1', suggestedName: null, description: null, amount: 2 }] }] };
+const GOOD = { area: null, buildings: [{ name: 'A', requirements: [{ materialId: 'm1', suggestedName: null, description: null, amount: 2, box: null }] }] };
 const respond = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
 const ok = (content: string) => respond(200, { choices: [{ message: { content } }] });
 const input = { imageDataUrl: 'data:image/jpeg;base64,AAAA', knownMaterials: [{ id: 'm1', name: 'Tahta', description: 'plank' }] };
