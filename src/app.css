@@ -1,0 +1,9 @@
+:root {
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: #14110f;
+  color: #e8dfd0;
+  font-family: system-ui, sans-serif;
+}
