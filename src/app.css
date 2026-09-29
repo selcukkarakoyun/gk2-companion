@@ -1,9 +1,86 @@
 :root {
+  --bg: #14110f;
+  --panel: #201b17;
+  --panel-2: #2a231d;
+  --line: #3a3128;
+  --text: #e8dfd0;
+  --muted: #a29583;
+  --accent: #c9a24b;
+  --accent-ink: #1a1408;
+  --danger: #d0664d;
+  --ok: #7ea36a;
   color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.4;
 }
-body {
-  margin: 0;
-  background: #14110f;
-  color: #e8dfd0;
-  font-family: system-ui, sans-serif;
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; margin: 0; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1.05rem; }
+p { margin: 0; }
+ul { list-style: none; margin: 0; padding: 0; }
+
+button, input, select { font: inherit; color: inherit; }
+button {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  min-height: 44px;
+  cursor: pointer;
 }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--danger); }
+button.icon { min-width: 44px; padding: 0.4rem; }
+
+input[type='text'], input[type='password'], input[type='number'], select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+input[type='checkbox'] { width: 1.15rem; height: 1.15rem; accent-color: var(--accent); }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.container { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px; }
+.shell > header { padding: 16px 0 8px; }
+.shell > main { padding: 8px 0 96px; display: grid; gap: 12px; }
+@media (min-width: 720px) { .shell > main { padding-bottom: 48px; } }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.row { display: flex; gap: 10px; align-items: center; }
+.row.between { justify-content: space-between; }
+.row.wrap { flex-wrap: wrap; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.notice { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel); }
+.notice.warn { border-color: var(--danger); }
+.notice.error { border-color: var(--danger); color: var(--danger); }
+.notice.ok { border-color: var(--ok); color: var(--ok); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 0.9rem; }
+.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.badge.new { border-color: var(--ok); color: var(--ok); }
+.badge.update { border-color: var(--accent); color: var(--accent); }
+.field { display: grid; gap: 6px; }
+.field > label, .field > .label { font-size: 0.9rem; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
+.stepper output { min-width: 2ch; text-align: center; font-weight: 600; }
+
+.overlay { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow: auto; overscroll-behavior: contain; }
+.overlay-inner { max-width: 800px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+.center { text-align: center; padding: 32px 0; }
+.spinner { width: 36px; height: 36px; margin: 0 auto 12px; border: 4px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
