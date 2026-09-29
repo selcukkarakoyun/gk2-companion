@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ScanFormatError, parseScanResponse } from './parse';
 
 const good = {
+  area: 'Bahçe',
   buildings: [
     {
       name: 'İç Mekân Bankı I',
       requirements: [
-        { materialId: 'm_abc', suggestedName: null, description: null, amount: 2 },
-        { materialId: null, suggestedName: 'Çivi', description: 'gold nails', amount: 6 },
+        { materialId: 'm_abc', suggestedName: null, description: null, amount: 2, box: null },
+        { materialId: null, suggestedName: 'Çivi', description: 'gold nails', amount: 6, box: { x: 0.1, y: 0.2, w: 0.05, h: 0.06 } },
       ],
     },
   ],
@@ -27,7 +28,7 @@ describe('parseScanResponse', () => {
   });
 
   it('boş yapı listesini kabul eder', () => {
-    expect(parseScanResponse('{"buildings":[]}')).toEqual({ buildings: [] });
+    expect(parseScanResponse('{"buildings":[]}')).toEqual({ area: null, buildings: [] });
   });
 
   it('string miktarı sayıya çevirir', () => {
@@ -45,6 +46,7 @@ describe('parseScanResponse', () => {
       suggestedName: 'Taş',
       description: null,
       amount: 3,
+      box: null,
     });
   });
 
@@ -80,6 +82,7 @@ describe('parseScanResponse', () => {
       suggestedName: null,
       description: null,
       amount: 1,
+      box: null,
     });
   });
 
@@ -99,5 +102,42 @@ describe('parseScanResponse', () => {
 
   it.each(['', 'sadece yazı', '{bozuk', '{"buildings": "yok"}', '[]', '{"x":1}'])('geçersiz cevabı reddeder (%s)', (text) => {
     expect(() => parseScanResponse(text)).toThrow(ScanFormatError);
+  });
+});
+
+describe('area ve box', () => {
+  const one = (extra: Record<string, unknown>) =>
+    parseScanResponse(JSON.stringify({ buildings: [{ name: 'A', requirements: [{ materialId: 'm', amount: 1, ...extra }] }] }));
+
+  it('area değerini kırpar; yoksa veya boşsa null yapar', () => {
+    expect(parseScanResponse('{"area":"  Avlu ","buildings":[]}').area).toBe('Avlu');
+    expect(parseScanResponse('{"buildings":[]}').area).toBeNull();
+    expect(parseScanResponse('{"area":"  ","buildings":[]}').area).toBeNull();
+    expect(parseScanResponse('{"area":"null","buildings":[]}').area).toBeNull();
+  });
+  it('geçerli box değerini korur', () => {
+    expect(one({ box: { x: 0.5, y: 0.25, w: 0.1, h: 0.2 } }).buildings[0].requirements[0].box).toEqual({ x: 0.5, y: 0.25, w: 0.1, h: 0.2 });
+  });
+  it('box eksikse null', () => {
+    expect(one({}).buildings[0].requirements[0].box).toBeNull();
+  });
+  it('aralık dışı box değerini 0–1 içine sıkıştırır', () => {
+    const b = one({ box: { x: -0.2, y: 0.9, w: 0.5, h: 0.5 } }).buildings[0].requirements[0].box!;
+    expect(b.x).toBe(0);
+    expect(b.y).toBe(0.9);
+    expect(b.w).toBe(0.5);
+    expect(b.h).toBeCloseTo(0.1);
+  });
+  it.each([
+    ['metin', { x: 'a', y: 0, w: 0.1, h: 0.1 }],
+    ['NaN benzeri null', { x: null, y: 0, w: 0.1, h: 0.1 }],
+    ['negatif genişlik', { x: 0.1, y: 0.1, w: -0.2, h: 0.1 }],
+    ['sıfır alan', { x: 0.1, y: 0.1, w: 0, h: 0.1 }],
+    ['tamamen dışarıda', { x: 1.5, y: 0.1, w: 0.1, h: 0.1 }],
+    ['nesne değil', 'kutu'],
+  ])('geçersiz box (%s) null olur, tarama bozulmaz', (_n, box) => {
+    const r = one({ box });
+    expect(r.buildings[0].requirements[0].box).toBeNull();
+    expect(r.buildings[0].requirements[0].amount).toBe(1);
   });
 });
