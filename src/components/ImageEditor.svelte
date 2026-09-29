@@ -90,8 +90,9 @@
   }
 </script>
 
-<section class="editor">
-  <h2>Görseli düzenle</h2>
+<section class="window editor">
+  <header class="titlebar"><h2>Görseli düzenle</h2></header>
+  <div class="window-body">
   <p class="muted">İki parmakla yakınlaştır, sürükleyerek kaydır. Sadece menü satırlarını kadraja al.</p>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -134,18 +135,19 @@
     <button onclick={oncancel}>İptal</button>
     <button class="primary" onclick={proceed}>Devam</button>
   </div>
+  </div>
 </section>
 
 <style>
-  .editor { display: grid; gap: 12px; }
   .frame {
     touch-action: none;
     width: min(100%, calc(60dvh * var(--ar)));
     aspect-ratio: var(--ar);
     margin: 0 auto;
     background: #000;
-    border: 1px solid var(--line);
-    border-radius: 8px;
+    border: 3px solid;
+    border-color: #080a12 var(--panel-line) var(--panel-line) #080a12;
+    border-radius: 3px;
     overflow: hidden;
     cursor: grab;
   }

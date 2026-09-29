@@ -44,15 +44,16 @@
   }
 </script>
 
-<section class="review">
-  <h2>Sonucu kontrol et</h2>
+<section class="window review">
+  <header class="titlebar"><h2>Sonucu kontrol et</h2></header>
+  <div class="window-body">
   <p class="muted">
     Küçük pikselli rakamlarda hata olabilir. Adları ve miktarları düzelt, gerekmeyen satırları çıkar.
   </p>
 
   {#if visibleNew.length > 0}
-    <div class="card">
-      <h3>Yeni malzemeler</h3>
+    <div class="panel-row">
+      <h3 class="name-gold">Yeni malzemeler</h3>
       <p class="muted">AI ikon adı bilmez, kendi önerisini yazdı. Adı değiştirebilir veya mevcut bir malzemeyle eşleştirebilirsin.</p>
       {#each visibleNew as nm (nm.key)}
         <div class="field new-material" data-testid="review-new-material">
@@ -76,7 +77,7 @@
   {/if}
 
   {#each draft.buildings as b (b.key)}
-    <div class={['card', { excluded: !b.include }]} data-testid="review-building">
+    <div class={['panel-row', { excluded: !b.include }]} data-testid="review-building">
       <div class="row wrap">
         <label class="check">
           <input type="checkbox" bind:checked={b.include} aria-label="Yapıyı ekle" />
@@ -120,14 +121,21 @@
     <button onclick={oncancel}>İptal</button>
     <button class="primary" disabled={error !== null} onclick={onconfirm}>Listeye ekle</button>
   </div>
+  </div>
 </section>
 
 <style>
-  .review { display: grid; gap: 12px; }
   .excluded { opacity: 0.55; }
   .row > input[type='text'] { flex: 1; min-width: 10ch; }
   .row > select { flex: 1; min-width: 10ch; }
   .amount { width: 6rem !important; flex: 0 0 auto; }
   .req { padding-left: 4px; }
-  .actions { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; }
+  .actions {
+    position: sticky;
+    bottom: 0;
+    margin: 0 -10px -10px;
+    padding: 10px;
+    background: var(--panel);
+    border-top: 2px solid var(--panel-line);
+  }
 </style>

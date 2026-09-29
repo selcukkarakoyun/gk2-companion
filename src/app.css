@@ -1,86 +1,282 @@
+/*
+ * Görsel dil: Graveyard Keeper 2 inşa menüsü.
+ * Çelik/bronz çerçeveli pencere, parşömen başlık çubuğu, lacivert satırlar,
+ * mavi "blueprint" ikon karoları, altın vurgular, kırmızı/sarı sayaçlar.
+ */
 :root {
-  --bg: #14110f;
-  --panel: #201b17;
-  --panel-2: #2a231d;
-  --line: #3a3128;
-  --text: #e8dfd0;
-  --muted: #a29583;
-  --accent: #c9a24b;
-  --accent-ink: #1a1408;
-  --danger: #d0664d;
-  --ok: #7ea36a;
+  /* zemin ve paneller */
+  --bg: #0d1411;
+  --panel: #1c2233;
+  --panel-2: #232a40;
+  --panel-line: #30395a;
+  --slot: #141927;
+
+  /* metal çerçeve */
+  --frame-hi: #8790a8;
+  --frame: #535b73;
+  --frame-lo: #2b3145;
+  --frame-dark: #0b0d14;
+
+  /* parşömen başlık */
+  --parch-hi: #d2ad70;
+  --parch: #a97f3f;
+  --parch-lo: #7c5b2b;
+  --parch-ink: #2a1c0a;
+  --cream: #f4e6bf;
+
+  /* metin ve vurgu */
+  --text: #e9dfc6;
+  --muted: #98a0b8;
+  --gold: #eac86e;
+  --blue: #3b70d4;
+  --blue-hi: #9cc0ff;
+  --blue-lo: #264c99;
+  --red: #e0463c;
+  --red-hi: #f2867d;
+  --red-lo: #9d2622;
+  --yellow: #f3c22f;
+  --ok: #83c56d;
+
+  /* eski adlar (bileşen stilleri için) */
+  --line: var(--panel-line);
+  --accent: var(--gold);
+  --accent-ink: var(--parch-ink);
+  --danger: var(--red-hi);
+
+  --pixel: 'Jersey 10', ui-monospace, 'Cascadia Mono', monospace;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--pixel);
+  font-synthesis: none;
+  font-size: 118%;
   line-height: 1.4;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
-body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
-h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; margin: 0; }
-h1 { font-size: 1.5rem; }
-h2 { font-size: 1.15rem; }
-h3 { font-size: 1.05rem; }
+body {
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(74, 118, 82, 0.22), transparent 60%),
+    radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1.2px) 0 0 / 4px 4px,
+    var(--bg);
+  background-attachment: fixed;
+}
+h1, h2, h3 { font-family: var(--pixel); font-weight: 400; margin: 0; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.3rem; }
 p { margin: 0; }
 ul { list-style: none; margin: 0; padding: 0; }
 
+/* ---------- düğmeler ---------- */
 button, input, select { font: inherit; color: inherit; }
 button {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.55rem 0.9rem;
+  font-family: var(--pixel);
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: var(--cream);
+  background: linear-gradient(180deg, #3b4360, #2a3148);
+  border: 2px solid;
+  border-color: var(--frame-hi) var(--frame-lo) var(--frame-dark) var(--frame);
+  border-radius: 4px;
+  padding: 0.45rem 0.95rem;
   min-height: 44px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
   cursor: pointer;
 }
-button:hover:not(:disabled) { border-color: var(--accent); }
+button:hover:not(:disabled) { filter: brightness(1.18); }
+button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
-button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
-button.danger { color: var(--danger); }
-button.icon { min-width: 44px; padding: 0.4rem; }
+button.primary {
+  color: var(--parch-ink);
+  background: linear-gradient(180deg, var(--parch-hi), var(--parch) 45%, var(--parch-lo));
+  border-color: #efd39a #5c4019 #3e2a0f #c99f5d;
+  text-shadow: 0 1px 0 rgba(255, 236, 190, 0.5);
+}
+button.danger {
+  color: #fff;
+  background: linear-gradient(180deg, var(--red), var(--red-lo));
+  border-color: var(--red-hi) #6d1614 #4a0f0d #d2574e;
+}
+button.icon { min-width: 44px; padding: 0.35rem; font-size: 1.25rem; }
 
+/* ---------- form alanları ---------- */
 input[type='text'], input[type='password'], input[type='number'], select {
   width: 100%;
   min-height: 44px;
-  padding: 0.55rem 0.7rem;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-family: var(--body);
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--slot);
+  border: 2px solid;
+  border-color: #080a12 var(--panel-line) var(--panel-line) #080a12;
+  border-radius: 3px;
 }
-input[type='checkbox'] { width: 1.15rem; height: 1.15rem; accent-color: var(--accent); }
+input[type='checkbox'] { width: 1.3rem; height: 1.3rem; accent-color: var(--gold); }
+input[type='range'] { accent-color: var(--gold); width: 100%; }
 input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
 
+/* ---------- yerleşim ---------- */
 .container { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px; }
-.shell > header { padding: 16px 0 8px; }
-.shell > main { padding: 8px 0 96px; display: grid; gap: 12px; }
+.shell > main { padding: 12px 0 104px; display: grid; gap: 14px; }
 @media (min-width: 720px) { .shell > main { padding-bottom: 48px; } }
 
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 18px 0 10px; }
+.brand h1 { color: var(--gold); text-shadow: 0 3px 0 #000; letter-spacing: 0.02em; }
+.brand .blueprint { width: 40px; height: 40px; }
+
+/* ---------- pencere (çelik çerçeve + parşömen başlık) ---------- */
+.window {
+  background: var(--panel);
+  border: 4px solid;
+  border-color: var(--frame-hi) var(--frame) var(--frame-lo) var(--frame);
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px var(--frame-dark), 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 14px;
+  color: var(--cream);
+  background: linear-gradient(180deg, var(--parch-hi) 0, var(--parch) 14%, var(--parch-lo) 100%);
+  border-bottom: 3px solid var(--frame-dark);
+  box-shadow: inset 0 2px 0 rgba(255, 236, 190, 0.4);
+  text-shadow: 0 2px 0 rgba(30, 18, 4, 0.8);
+  border-radius: 2px 2px 0 0;
+}
+.titlebar h2 { font-size: 1.7rem; }
+.titlebar .grow { flex: 1; }
+.window-body { display: grid; gap: 8px; padding: 10px; }
+
+/* ---------- satır paneli (koyu lacivert) ---------- */
+.panel-row {
+  background: var(--panel-2);
+  border: 2px solid var(--panel-line);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+.panel-row.done { opacity: 0.55; }
+.card {
+  background: var(--panel-2);
+  border: 2px solid var(--panel-line);
+  border-radius: 4px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+/* ---------- mavi "blueprint" ikon karosu ---------- */
+.blueprint {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #eaf3ff;
+  border: 2px solid var(--blue-hi);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px var(--blue-lo);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(180deg, #4b84ea, #2e5dbf);
+}
+.blueprint svg { width: 28px; height: 28px; }
+
+/* ---------- malzeme yuvası (slot) ---------- */
+.slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot {
+  min-width: 60px;
+  padding: 4px 9px 3px;
+  display: grid;
+  justify-items: center;
+  line-height: 1.15;
+  background: var(--slot);
+  border: 2px solid;
+  border-color: #080a12 var(--panel-line) var(--panel-line) #080a12;
+  border-radius: 3px;
+}
+.slot-name { font-size: 0.95rem; color: var(--muted); }
+.slot-count { font-size: 1.35rem; font-weight: 400; color: var(--yellow); text-shadow: 0 2px 0 #000; }
+.slot-count small { font-size: 0.95rem; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.slot.big { min-width: 72px; padding: 6px 12px; }
+.slot.big .slot-count { font-size: 1.8rem; }
+
+.name-gold { color: var(--cream); font-size: 1.3rem; }
+.name-dim { color: var(--muted); }
+
+/* ---------- ortak küçük parçalar ---------- */
 .row { display: flex; gap: 10px; align-items: center; }
 .row.between { justify-content: space-between; }
 .row.wrap { flex-wrap: wrap; }
-.muted { color: var(--muted); font-size: 0.9rem; }
-.notice { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel); }
-.notice.warn { border-color: var(--danger); }
-.notice.error { border-color: var(--danger); color: var(--danger); }
-.notice.ok { border-color: var(--ok); color: var(--ok); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 0.9rem; }
-.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-.badge.new { border-color: var(--ok); color: var(--ok); }
-.badge.update { border-color: var(--accent); color: var(--accent); }
-.field { display: grid; gap: 6px; }
-.field > label, .field > .label { font-size: 0.9rem; color: var(--muted); }
-.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
-.stepper { display: inline-flex; align-items: center; gap: 8px; }
-.stepper output { min-width: 2ch; text-align: center; font-weight: 600; }
+.muted { font-family: var(--body); color: var(--muted); font-size: 0.8rem; }
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--gold); font-size: 1.3rem; text-shadow: 0 2px 0 #000;
+}
+.divider::after { content: ''; flex: 1; height: 2px; background: var(--panel-line); }
 
-.overlay { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow: auto; overscroll-behavior: contain; }
-.overlay-inner { max-width: 800px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
-.center { text-align: center; padding: 32px 0; }
-.spinner { width: 36px; height: 36px; margin: 0 auto 12px; border: 4px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+.notice {
+  font-family: var(--body);
+  font-size: 0.9rem;
+  border: 2px solid var(--panel-line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  background: var(--panel);
+}
+.notice.warn { border-color: var(--red); }
+.notice.error { border-color: var(--red); color: var(--red-hi); }
+.notice.ok { border-color: var(--ok); color: var(--ok); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--slot); border: 2px solid var(--panel-line); border-radius: 3px; padding: 2px 10px; font-size: 0.95rem; }
+
+.badge {
+  font-size: 0.95rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 2px solid var(--panel-line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.badge.new { border-color: var(--ok); color: var(--ok); }
+.badge.update { border-color: var(--gold); color: var(--gold); }
+
+.field { display: grid; gap: 6px; }
+.field > label, .field > .label { font-size: 0.95rem; color: var(--gold); }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
+.stepper output {
+  min-width: 3ch; text-align: center; font-weight: 400; font-size: 1.6rem;
+  color: var(--yellow); text-shadow: 0 2px 0 #000;
+}
+
+/* ---------- tam ekran katman (tarama akışı) ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 50; overflow: auto; overscroll-behavior: contain;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(74, 118, 82, 0.25), transparent 60%),
+    radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1.2px) 0 0 / 4px 4px,
+    var(--bg);
+}
+.overlay-inner { max-width: 800px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+.center { text-align: center; padding: 28px 0; }
+.spinner {
+  width: 36px; height: 36px; margin: 0 auto 12px;
+  border: 4px solid var(--panel-line); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.9s linear infinite;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }

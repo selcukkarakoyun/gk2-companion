@@ -32,51 +32,64 @@
   }
 </script>
 
-{#if totals.length === 0}
-  <p class="muted center">Toplanacak malzeme yok. Yapılmamış yapı ekleyince burada görünür.</p>
-{:else}
-  <ul class="card">
-    {#each totals as t (t.material.id)}
-      <li data-testid="total-row" class="total-row">
-        {#if editingId === t.material.id}
-          <div class="field">
-            <div class="row">
-              <input type="text" bind:value={draftName} {onkeydown} aria-label="Malzeme adı" />
-              <button class="primary" onclick={commit}>Kaydet</button>
-              <button onclick={cancel}>Vazgeç</button>
-            </div>
-            {#if error}<p class="notice error">{error}</p>{/if}
-          </div>
-        {:else}
-          <div class="row between">
-            <details>
-              <summary>
-                <span class="name">{t.material.name}</span>
-                <strong class="total">{t.total}</strong>
-              </summary>
-              <ul class="sources">
-                {#each t.sources as s (s.buildingId)}
-                  <li class="muted">{s.buildingName}: {s.amount}</li>
-                {/each}
-              </ul>
-            </details>
-            <button
-              class="icon"
-              aria-label="{t.material.name} adını düzenle"
-              onclick={() => startEdit(t.material.id, t.material.name)}>Düzenle</button
-            >
-          </div>
-        {/if}
-      </li>
-    {/each}
-  </ul>
-{/if}
+<section class="window">
+  <header class="titlebar">
+    <h2>Toplanacak malzemeler</h2>
+  </header>
+  <div class="window-body">
+    {#if totals.length === 0}
+      <p class="muted center">Toplanacak malzeme yok. Yapılmamış yapı ekleyince burada görünür.</p>
+    {:else}
+      <ul class="rows">
+        {#each totals as t (t.material.id)}
+          <li data-testid="total-row" class="panel-row total-row">
+            {#if editingId === t.material.id}
+              <div class="field">
+                <div class="row wrap">
+                  <input type="text" bind:value={draftName} {onkeydown} aria-label="Malzeme adı" />
+                  <button class="primary" onclick={commit}>Kaydet</button>
+                  <button onclick={cancel}>Vazgeç</button>
+                </div>
+                {#if error}<p class="notice error">{error}</p>{/if}
+              </div>
+            {:else}
+              <div class="row between">
+                <details>
+                  <summary>
+                    <span class="name name-gold">{t.material.name}</span>
+                    <span class="slot big"><span class="slot-count">{t.total}</span></span>
+                  </summary>
+                  <ul class="sources">
+                    {#each t.sources as s (s.buildingId)}
+                      <li class="muted">{s.buildingName}: {s.amount}</li>
+                    {/each}
+                  </ul>
+                </details>
+                <button
+                  class="icon edit"
+                  aria-label="{t.material.name} adını düzenle"
+                  onclick={() => startEdit(t.material.id, t.material.name)}>Düzenle</button
+                >
+              </div>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+</section>
 
 <style>
-  .total-row { padding: 6px 0; border-bottom: 1px solid var(--line); }
-  .total-row:last-child { border-bottom: 0; }
+  .rows { display: grid; gap: 8px; }
   details { flex: 1; min-width: 0; }
-  summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; min-height: 44px; align-items: center; }
-  .total { font-size: 1.2rem; color: var(--accent); }
-  .sources { padding: 0 0 8px 12px; display: grid; gap: 2px; }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .sources { padding: 4px 0 4px 12px; display: grid; gap: 2px; }
+  .edit { font-size: 0.95rem; padding: 0.35rem 0.7rem; }
 </style>
