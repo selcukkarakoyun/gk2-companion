@@ -294,3 +294,5 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .areas { display: grid; gap: 2px; padding: 2px 0 0 4px; }
 .areas li { font-size: 1.15rem; color: var(--text); }
 .areas li::before { content: '– '; color: var(--muted); }
+
+.cropper { z-index: 60; }
