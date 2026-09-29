@@ -16,6 +16,16 @@
   <header class="row">
     <BlueprintIcon />
     <h3 class={['grow', building.built ? 'name-dim' : 'name-gold']}>{building.name}</h3>
+    <div class="stepper header-stepper">
+      <button
+        class="icon"
+        aria-label="Adedi azalt"
+        disabled={building.qty <= 1}
+        onclick={() => store.setQty(building.id, building.qty - 1)}>−</button
+      >
+      <output aria-label="Adet">{building.qty}</output>
+      <button class="icon" aria-label="Adedi artır" onclick={() => store.setQty(building.id, building.qty + 1)}>+</button>
+    </div>
     <button class="danger" onclick={remove}>Sil</button>
   </header>
   <ul class="slots">
@@ -30,17 +40,7 @@
       </li>
     {/each}
   </ul>
-  <footer class="row between wrap">
-    <div class="stepper">
-      <button
-        class="icon"
-        aria-label="Adedi azalt"
-        disabled={building.qty <= 1}
-        onclick={() => store.setQty(building.id, building.qty - 1)}>−</button
-      >
-      <output aria-label="Adet">{building.qty}</output>
-      <button class="icon" aria-label="Adedi artır" onclick={() => store.setQty(building.id, building.qty + 1)}>+</button>
-    </div>
+  <footer class="row end">
     <label class="check">
       <input type="checkbox" checked={building.built} onchange={() => store.toggleBuilt(building.id)} />
       Yapıldı
@@ -50,4 +50,6 @@
 
 <style>
   .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .header-stepper { margin-inline-end: 24px; }
+  .end { justify-content: flex-end; }
 </style>
