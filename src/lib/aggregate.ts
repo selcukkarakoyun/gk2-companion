@@ -1,10 +1,23 @@
+import { normalizeName } from './merge';
 import type { AppState, Material } from './types';
 
 export type MaterialTotal = {
   material: Material;
   total: number;
-  sources: { buildingId: string; buildingName: string; amount: number }[];
+  byArea: { area: string; amount: number }[];
+  sources: { buildingId: string; buildingName: string; area: string; amount: number }[];
 };
+
+function byAreaOf(sources: MaterialTotal['sources']): MaterialTotal['byArea'] {
+  const map = new Map<string, { area: string; amount: number }>();
+  for (const s of sources) {
+    const key = normalizeName(s.area);
+    const hit = map.get(key);
+    if (hit) hit.amount += s.amount;
+    else map.set(key, { area: s.area, amount: s.amount });
+  }
+  return [...map.values()].sort((a, b) => a.area.localeCompare(b.area, 'tr'));
+}
 
 export function aggregate(state: AppState): MaterialTotal[] {
   const byId = new Map(state.materials.map((m) => [m.id, m]));
@@ -19,15 +32,17 @@ export function aggregate(state: AppState): MaterialTotal[] {
       if (amount <= 0) continue;
       let t = totals.get(material.id);
       if (!t) {
-        t = { material, total: 0, sources: [] };
+        t = { material, total: 0, byArea: [], sources: [] };
         totals.set(material.id, t);
       }
       t.total += amount;
-      t.sources.push({ buildingId: b.id, buildingName: b.name, amount });
+      t.sources.push({ buildingId: b.id, buildingName: b.name, area: b.area, amount });
     }
   }
 
-  return [...totals.values()].sort(
+  const rows = [...totals.values()];
+  for (const t of rows) t.byArea = byAreaOf(t.sources);
+  return rows.sort(
     (a, b) => b.total - a.total || a.material.name.localeCompare(b.material.name, 'tr'),
   );
 }
