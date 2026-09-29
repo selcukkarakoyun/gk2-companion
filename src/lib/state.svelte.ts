@@ -56,6 +56,10 @@ class AppStore {
     return null;
   }
 
+  setMaterialIcon(materialId: string, icon: string | null): void {
+    this.commit(ops.setMaterialIcon(this.state, materialId, icon));
+  }
+
   applyScan(draft: ReviewDraft): void {
     this.commit(applyDraft(this.state, draft, newId));
   }

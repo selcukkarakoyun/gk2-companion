@@ -1,8 +1,10 @@
 <script lang="ts">
   import { store } from '../lib/state.svelte';
   import { parseImport } from '../lib/storage';
+  import MaterialRow from './MaterialRow.svelte';
 
   let showKey = $state(false);
+  const materials = $derived([...store.state.materials].sort((a, b) => a.name.localeCompare(b.name, 'tr')));
   let message = $state<{ kind: 'ok' | 'error'; text: string } | null>(null);
 
   function exportFile() {
@@ -66,6 +68,22 @@
 </section>
 
 <section class="window">
+  <header class="titlebar"><h2>Tüm Eşyalar</h2></header>
+  <div class="window-body">
+    {#if materials.length === 0}
+      <p class="muted center">Henüz eşya yok. Yapı ekleyince burada listelenir.</p>
+    {:else}
+      <p class="muted">Adları değiştirebilir, PNG, WEBP veya JPG görsel yükleyebilirsin.</p>
+      <ul class="materials">
+        {#each materials as m (m.id)}
+          <MaterialRow material={m} />
+        {/each}
+      </ul>
+    {/if}
+  </div>
+</section>
+
+<section class="window">
   <header class="titlebar"><h2>Veriler</h2></header>
   <div class="window-body">
     <div class="panel-row">
@@ -83,6 +101,7 @@
 </section>
 
 <style>
+  .materials { display: grid; gap: 8px; }
   .import { cursor: pointer; }
   .btn {
     display: inline-flex;

@@ -38,3 +38,14 @@ export function renameMaterial(state: AppState, materialId: string, name: string
     },
   };
 }
+
+export function setMaterialIcon(state: AppState, materialId: string, icon: string | null): AppState {
+  return {
+    ...state,
+    materials: state.materials.map((m) => {
+      if (m.id !== materialId) return m;
+      const { icon: _old, ...rest } = m;
+      return icon ? { ...rest, icon } : rest;
+    }),
+  };
+}

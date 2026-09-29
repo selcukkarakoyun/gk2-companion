@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deleteBuilding, renameMaterial, setQty, toggleBuilt } from './ops';
+import { deleteBuilding, renameMaterial, setMaterialIcon, setQty, toggleBuilt } from './ops';
 import { bld, mat, st } from './test-helpers';
 
 const s = st([mat('m1', 'Tahta'), mat('m2', 'Çivi')], [bld('b1', 'A', [['m1', 1]]), bld('b2', 'B', [['m2', 1]])]);
@@ -49,5 +49,19 @@ describe('renameMaterial', () => {
   it('kendi adına (harf farkıyla) izin verir', () => {
     const r = renameMaterial(s, 'm1', 'TAHTA');
     expect(r.ok && r.state.materials[0].name).toBe('TAHTA');
+  });
+});
+
+describe('setMaterialIcon', () => {
+  it('ikonu ayarlar, diğer malzemeye dokunmaz ve girdiyi değiştirmez', () => {
+    const out = setMaterialIcon(s, 'm1', 'data:image/png;base64,AAA');
+    expect(out.materials[0].icon).toBe('data:image/png;base64,AAA');
+    expect(out.materials[1]).toBe(s.materials[1]);
+    expect(s.materials[0].icon).toBeUndefined();
+  });
+  it('null ikonu kaldırır', () => {
+    const withIcon = setMaterialIcon(s, 'm1', 'data:image/png;base64,AAA');
+    const out = setMaterialIcon(withIcon, 'm1', null);
+    expect('icon' in out.materials[0]).toBe(false);
   });
 });
