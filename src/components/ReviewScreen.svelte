@@ -132,7 +132,7 @@
         {#each visibleNew as nm (nm.key)}
           <div class="field new-material" data-testid="review-new-material">
             <div class="row wrap">
-              {#if nm.icon}<img class="slot-icon big" src={nm.icon} alt="{nm.name} ikonu" />{/if}
+              {@render iconEdit(nm.icon, `${nm.name} ikonu`, { kind: 'new', key: nm.key })}
               <input type="text" aria-label="Yeni malzeme adı" bind:value={nm.name} disabled={nm.mapTo !== null} />
               <select
                 aria-label="{newLabel(nm)} için mevcut malzeme"
@@ -146,11 +146,6 @@
               </select>
             </div>
             {#if nm.description}<p class="muted">İkon tarifi: {nm.description}</p>{/if}
-            {#if image && crop}
-              <div class="row">
-                <button onclick={() => (cropTarget = { kind: 'new', key: nm.key })}>Kırpmayı düzelt</button>
-              </div>
-            {/if}
           </div>
         {/each}
       </div>
@@ -162,15 +157,12 @@
         <p class="muted">Bu malzemelerin henüz ikonu yok. Taramadan kesilen ikonu kaydedebilirsin.</p>
         {#each visibleFills as f (f.materialId)}
           <div class="row wrap">
-            {#if f.icon}<img class="slot-icon big" src={f.icon} alt="{materialName(f.materialId)} ikon önerisi" />{/if}
+            {@render iconEdit(f.icon, `${materialName(f.materialId)} ikon önerisi`, { kind: 'fill', materialId: f.materialId })}
             <span class="name-gold">{materialName(f.materialId)}</span>
             <label class="check">
               <input type="checkbox" bind:checked={f.accept} disabled={!f.icon} />
               İkonu kaydet
             </label>
-            {#if image && crop}
-              <button onclick={() => (cropTarget = { kind: 'fill', materialId: f.materialId })}>Kırpmayı düzelt</button>
-            {/if}
           </div>
         {/each}
       </div>
@@ -224,12 +216,54 @@
   </div>
 </section>
 
+{#snippet iconEdit(icon: string | null | undefined, alt: string, target: CropTarget)}
+  {#if image && crop}
+    <button class="icon-edit" aria-label="İkonu düzenle" title="İkonu düzenle" onclick={() => (cropTarget = target)}>
+      {#if icon}<img class="slot-icon big" src={icon} {alt} />{:else}<span class="slot-icon big"></span>{/if}
+      <svg class="pencil" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path d="M3 17.25V21h3.75L18.4 9.35l-3.75-3.75L3 17.25zM20.7 7.05a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
+      </svg>
+    </button>
+  {:else if icon}
+    <img class="slot-icon big" src={icon} {alt} />
+  {/if}
+{/snippet}
+
 {#if cropTarget && image}
   <IconCropper {image} box={targetBox} onapply={applyCrop} oncancel={() => (cropTarget = null)} />
 {/if}
 
 <style>
   .excluded { opacity: 0.55; }
+  .icon-edit {
+    position: relative;
+    flex: none;
+    width: 60px;
+    height: 60px;
+    min-height: 0;
+    padding: 0;
+    display: grid;
+    place-items: center;
+  }
+  .icon-edit .slot-icon { width: 52px; height: 52px; }
+  .icon-edit .pencil {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 14px;
+    box-sizing: border-box;
+    color: var(--cream);
+    background: rgb(0 0 0 / 0.55);
+    opacity: 0;
+    transition: opacity 0.12s;
+    pointer-events: none;
+  }
+  .icon-edit:hover .pencil,
+  .icon-edit:focus-visible .pencil { opacity: 1; }
+  @media (hover: none) {
+    .icon-edit .pencil { inset: auto 0 0 auto; width: 22px; height: 22px; padding: 3px; opacity: 1; }
+  }
   .row > input[type='text'] { flex: 1; min-width: 10ch; }
   .row > select { flex: 1; min-width: 10ch; }
   .amount { width: 6rem !important; flex: 0 0 auto; }

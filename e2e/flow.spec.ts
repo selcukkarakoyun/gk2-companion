@@ -201,7 +201,7 @@ test('ikon önizlemesi çıkar, elle kırpma ikonu değiştirir, listede ve topl
   const before = await icon.getAttribute('src');
   expect(before).toMatch(/^data:image\/png;base64,/);
 
-  await page.getByRole('button', { name: 'Kırpmayı düzelt' }).first().click();
+  await page.getByRole('button', { name: 'İkonu düzenle' }).first().click();
   const dialog = page.getByRole('dialog', { name: 'İkonu kırp' });
   await expect(dialog).toBeVisible();
   const frame = dialog.getByTestId('crop-frame');
