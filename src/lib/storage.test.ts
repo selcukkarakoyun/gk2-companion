@@ -28,7 +28,7 @@ describe('loadState / saveState', () => {
     expect(kv.data.get(STATE_BACKUP_KEY)).toBe('{bozuk');
   });
   it('şekli geçersiz veriyi bozuk sayar', () => {
-    const kv = memory({ [STATE_KEY]: JSON.stringify({ version: 2, materials: [], buildings: [] }) });
+    const kv = memory({ [STATE_KEY]: JSON.stringify({ version: 3, materials: [], buildings: [] }) });
     expect(loadState(kv).corrupt).toBe(true);
   });
   it('okuma hata verirse (private mod) çökmeden boş durum döner', () => {
@@ -92,5 +92,55 @@ describe('ayarlar', () => {
   it('boş model adını varsayılanla değiştirir', () => {
     const kv = memory({ [SETTINGS_KEY]: JSON.stringify({ apiKey: 'k', model: '  ' }) });
     expect(loadSettings(kv).model).toBe(DEFAULT_MODEL);
+  });
+});
+
+const V1 = {
+  version: 1,
+  materials: [{ id: 'm1', name: 'Tahta', description: 'plank' }],
+  buildings: [{ id: 'b1', name: 'A', qty: 2, built: false, requirements: [{ materialId: 'm1', amount: 4 }] }],
+};
+const V1_AS_V2 = {
+  version: 2,
+  materials: [{ id: 'm1', name: 'Tahta', description: 'plank' }],
+  buildings: [{ id: 'b1', area: 'Genel', name: 'A', qty: 2, built: false, requirements: [{ materialId: 'm1', amount: 4 }] }],
+};
+const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+
+describe('sürüm 1 → 2 göçü', () => {
+  it('v1 verisini Genel alanıyla v2 yapar', () => {
+    expect(validateState(V1)).toEqual(V1_AS_V2);
+  });
+  it('loadState v1 kaydını bozuk saymaz, göç eder', () => {
+    const kv = memory({ [STATE_KEY]: JSON.stringify(V1) });
+    expect(loadState(kv)).toEqual({ state: V1_AS_V2, corrupt: false });
+  });
+  it('v1 yedek dosyası içe aktarılabilir', () => {
+    expect(parseImport(JSON.stringify(V1))).toEqual(V1_AS_V2);
+  });
+  it('dışa aktarma v2 yazar', () => {
+    expect(JSON.parse(exportState(sample)).version).toBe(2);
+  });
+});
+
+describe('v2 alan ve ikon doğrulaması', () => {
+  const withBuilding = (b: Record<string, unknown>) => ({
+    version: 2,
+    materials: [{ id: 'm1', name: 'T', description: '' }],
+    buildings: [{ id: 'b1', name: 'A', qty: 1, built: false, requirements: [], ...b }],
+  });
+  it.each([['boş', ''], ['boşluk', '   '], ['sayı', 5], ['yok', undefined]])('geçersiz alanı reddeder: %s', (_n, area) => {
+    expect(validateState(withBuilding({ area }))).toBeNull();
+  });
+  it('alanı kırpar ve boşlukları sadeleştirir', () => {
+    expect(validateState(withBuilding({ area: '  Yeni   Alan ' }))!.buildings[0].area).toBe('Yeni Alan');
+  });
+  it('png data URL ikonu korur', () => {
+    const raw = { version: 2, materials: [{ id: 'm1', name: 'T', description: '', icon: PNG }], buildings: [] };
+    expect(validateState(raw)!.materials[0].icon).toBe(PNG);
+  });
+  it.each(['http://x/y.png', 'data:image/jpeg;base64,AAAA', 5, ''])('geçersiz ikonu reddeder: %s', (icon) => {
+    const raw = { version: 2, materials: [{ id: 'm1', name: 'T', description: '', icon }], buildings: [] };
+    expect(validateState(raw)).toBeNull();
   });
 });

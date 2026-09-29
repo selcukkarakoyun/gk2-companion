@@ -2,11 +2,11 @@
   import { onMount } from 'svelte';
   import { createDeepSeekProvider } from '../lib/ai/deepseek';
   import { ScanError } from '../lib/ai/provider';
-  import { loadImage } from '../lib/image';
-  import { scanToDraft } from '../lib/merge';
+  import { bitmapFromDataUrl, cropToIcon, loadImage } from '../lib/image';
+  import { attachIcons, scanToDraft } from '../lib/merge';
   import { store } from '../lib/state.svelte';
   import { DEFAULT_MODEL } from '../lib/storage';
-  import type { ReviewDraft } from '../lib/types';
+  import type { Box, ReviewDraft } from '../lib/types';
   import ImageEditor from './ImageEditor.svelte';
   import ReviewScreen from './ReviewScreen.svelte';
 
@@ -21,8 +21,9 @@
     | { kind: 'review' };
 
   let step = $state<Step>({ kind: 'loading' });
-  let draft = $state<ReviewDraft>({ buildings: [], newMaterials: [] });
+  let draft = $state<ReviewDraft>({ area: '', skippedEmpty: 0, buildings: [], newMaterials: [], iconFills: [] });
   let bitmap = $state.raw<ImageBitmap | null>(null);
+  let cropBitmap = $state.raw<ImageBitmap | null>(null);
   let imageDataUrl = $state('');
   let controller: AbortController | null = null;
 
@@ -38,8 +39,14 @@
     return () => {
       controller?.abort();
       bitmap?.close();
+      cropBitmap?.close();
     };
   });
+
+  function cropFn(box: Box): string {
+    if (!cropBitmap) throw new Error('Görsel yok');
+    return cropToIcon(cropBitmap, box);
+  }
 
   async function runScan() {
     if (!store.settings.apiKey.trim()) {
@@ -58,11 +65,20 @@
         knownMaterials: $state.snapshot(store.state.materials),
         signal: controller.signal,
       });
-      if (result.buildings.length === 0) {
+      const snapshot = $state.snapshot(store.state);
+      const next = scanToDraft(result, snapshot);
+      if (next.buildings.length === 0) {
         step = { kind: 'empty' };
         return;
       }
-      draft = scanToDraft(result, $state.snapshot(store.state));
+      cropBitmap?.close();
+      try {
+        cropBitmap = await bitmapFromDataUrl(imageDataUrl);
+      } catch {
+        cropBitmap = null;
+      }
+      attachIcons(next, snapshot, cropFn);
+      draft = next;
       step = { kind: 'review' };
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') return;
@@ -95,7 +111,14 @@
     {#if step.kind === 'edit' && bitmap}
       <ImageEditor {bitmap} oncancel={onclose} oncontinue={onContinue} />
     {:else if step.kind === 'review'}
-      <ReviewScreen bind:draft appState={store.state} onconfirm={confirmDraft} oncancel={onclose} />
+      <ReviewScreen
+        bind:draft
+        appState={store.state}
+        image={cropBitmap ? imageDataUrl : null}
+        crop={cropBitmap ? cropFn : null}
+        onconfirm={confirmDraft}
+        oncancel={onclose}
+      />
     {:else}
       <section class="window">
         <header class="titlebar"><h2>Tarama</h2></header>

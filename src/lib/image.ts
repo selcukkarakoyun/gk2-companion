@@ -1,12 +1,15 @@
 import {
   MAX_OUTPUT_SIDE,
+  boxToRect,
   cropRect,
+  iconSize,
   outputSize,
   rotatedSize,
   rotationTransform,
   type Rotation,
   type View,
 } from './image-math';
+import type { Box } from './types';
 
 export async function loadImage(file: Blob): Promise<ImageBitmap> {
   try {
@@ -50,4 +53,22 @@ export function renderToDataUrl(bitmap: ImageBitmap, rot: Rotation, view: View):
   if (!ctx) throw new Error('Canvas kullanılamıyor.');
   drawCrop(ctx, bitmap, rot, view, w, h);
   return canvas.toDataURL('image/jpeg', 0.85);
+}
+
+export async function bitmapFromDataUrl(dataUrl: string): Promise<ImageBitmap> {
+  const blob = await (await fetch(dataUrl)).blob();
+  return createImageBitmap(blob);
+}
+
+export function cropToIcon(bitmap: ImageBitmap, box: Box): string {
+  const r = boxToRect(box, bitmap.width, bitmap.height);
+  const { w, h } = iconSize(r.w, r.h);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas kullanılamıyor.');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(bitmap, r.x, r.y, r.w, r.h, 0, 0, w, h);
+  return canvas.toDataURL('image/png');
 }

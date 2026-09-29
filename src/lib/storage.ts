@@ -4,30 +4,46 @@ export const STATE_KEY = 'gk2c.state';
 export const STATE_BACKUP_KEY = 'gk2c.state.corrupt-backup';
 export const SETTINGS_KEY = 'gk2c.settings';
 export const DEFAULT_MODEL = 'deepseek-flash';
+export const DEFAULT_AREA = 'Genel';
 
 export interface KV {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
 }
 
-export const emptyState = (): AppState => ({ version: 1, materials: [], buildings: [] });
+export const emptyState = (): AppState => ({ version: 2, materials: [], buildings: [] });
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+export const PNG_PREFIX = 'data:image/png;base64,';
+const cleanArea = (s: string) => s.trim().replace(/\s+/g, ' ');
+
 export function validateState(raw: unknown): AppState | null {
-  if (!isObj(raw) || raw.version !== 1 || !Array.isArray(raw.materials) || !Array.isArray(raw.buildings)) {
-    return null;
-  }
+  if (!isObj(raw) || (raw.version !== 1 && raw.version !== 2)) return null;
+  if (!Array.isArray(raw.materials) || !Array.isArray(raw.buildings)) return null;
+  const v2 = raw.version === 2;
+
   const materials: Material[] = [];
   const ids = new Set<string>();
   for (const m of raw.materials) {
     if (!isObj(m) || typeof m.id !== 'string' || !m.id || typeof m.name !== 'string' || ids.has(m.id)) {
       return null;
     }
+    let icon: string | undefined;
+    if (v2 && m.icon !== undefined) {
+      if (typeof m.icon !== 'string' || !m.icon.startsWith(PNG_PREFIX)) return null;
+      icon = m.icon;
+    }
     ids.add(m.id);
-    materials.push({ id: m.id, name: m.name, description: typeof m.description === 'string' ? m.description : '' });
+    materials.push({
+      id: m.id,
+      name: m.name,
+      description: typeof m.description === 'string' ? m.description : '',
+      ...(icon ? { icon } : {}),
+    });
   }
+
   const buildings: Building[] = [];
   const buildingIds = new Set<string>();
   for (const b of raw.buildings) {
@@ -35,6 +51,11 @@ export function validateState(raw: unknown): AppState | null {
       return null;
     }
     if (!Number.isInteger(b.qty) || (b.qty as number) < 1 || typeof b.built !== 'boolean') return null;
+    let area = DEFAULT_AREA;
+    if (v2) {
+      if (typeof b.area !== 'string' || !cleanArea(b.area)) return null;
+      area = cleanArea(b.area);
+    }
     // Arayüz yapıları id ile, malzeme satırlarını materialId ile anahtarlar; yinelenen anahtar çizimi çökertir.
     if (buildingIds.has(b.id)) return null;
     buildingIds.add(b.id);
@@ -54,9 +75,9 @@ export function validateState(raw: unknown): AppState | null {
       usedMaterials.add(r.materialId);
       requirements.push({ materialId: r.materialId, amount: r.amount as number });
     }
-    buildings.push({ id: b.id, name: b.name, qty: b.qty as number, built: b.built, requirements });
+    buildings.push({ id: b.id, area, name: b.name, qty: b.qty as number, built: b.built, requirements });
   }
-  return { version: 1, materials, buildings };
+  return { version: 2, materials, buildings };
 }
 
 export function loadState(kv: KV): { state: AppState; corrupt: boolean } {

@@ -8,7 +8,9 @@ Graveyard Keeper 2 inşa menüsünü (ekran görüntüsü veya telefon fotoğraf
 2. Yapılar sekmesinde **Tara (kamera)** veya **Galeriden seç**.
 3. Görseli döndür/yakınlaştır, **Devam**.
 4. AI sonucunu kontrol et, düzelt, **Listeye ekle**.
-5. Toplam sekmesinde gereken toplam malzemeyi gör. Yapı bitince "Yapıldı" işaretle.
+   - Alan (Bahçe, Avlu vb.) pencere başlığından okunur; yanlışsa inceleme ekranında düzeltirsin.
+   - Her malzemenin ikonu görselden kesilip saklanır; yanlışsa **Kırpmayı düzelt** ile elle kesersin. Kayıtlı ikonlar sonraki taramalarda AI'a referans olarak gönderilir.
+5. Toplam sekmesinde gereken toplam malzemeyi ve alanlara göre kırılımını gör (ör. Çivi = 30: Avlu = 12, Bahçe = 18). Yapı bitince "Yapıldı" işaretle.
 
 Veriler ve API anahtarı yalnızca bu cihazın tarayıcısında saklanır. Ayarlar > Dışa aktar ile yedek alınabilir (anahtar yedeğe girmez).
 

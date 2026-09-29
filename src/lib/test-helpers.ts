@@ -9,6 +9,7 @@ export const bld = (
   extra: Partial<Building> = {},
 ): Building => ({
   id,
+  area: 'Genel',
   name,
   qty: 1,
   built: false,
@@ -17,7 +18,7 @@ export const bld = (
 });
 
 export const st = (materials: Material[] = [], buildings: Building[] = []): AppState => ({
-  version: 1,
+  version: 2,
   materials,
   buildings,
 });

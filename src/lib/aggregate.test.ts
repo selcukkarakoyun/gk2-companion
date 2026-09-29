@@ -14,7 +14,7 @@ describe('aggregate', () => {
     const s = st([tahta], [bld('b1', 'Sandık', [['t', 4]], { qty: 3 })]);
     const [row] = aggregate(s);
     expect(row.total).toBe(12);
-    expect(row.sources).toEqual([{ buildingId: 'b1', buildingName: 'Sandık', amount: 12 }]);
+    expect(row.sources).toEqual([{ buildingId: 'b1', buildingName: 'Sandık', area: 'Genel', amount: 12 }]);
   });
 
   it('yapıldı işaretli yapıları saymaz', () => {
@@ -47,6 +47,35 @@ describe('aggregate', () => {
       [bld('b1', 'A', [['a', 5], ['b', 5], ['c', 9]])],
     );
     expect(aggregate(s).map((r) => r.material.name)).toEqual(['Tahta', 'Çivi', 'Taş']);
+  });
+
+  it('alan kırılımı: aynı alanı toplar, yapıldı olanı hariç tutar, adetle çarpar', () => {
+    const s = st([civi], [
+      bld('b1', 'A', [['c', 4]], { area: 'Bahçe', qty: 2 }),
+      bld('b2', 'B', [['c', 6]], { area: 'Avlu' }),
+      bld('b3', 'C', [['c', 10]], { area: 'Bahçe' }),
+      bld('b4', 'D', [['c', 99]], { area: 'Bahçe', built: true }),
+    ]);
+    const [row] = aggregate(s);
+    expect(row.total).toBe(24);
+    expect(row.byArea).toEqual([
+      { area: 'Avlu', amount: 6 },
+      { area: 'Bahçe', amount: 18 },
+    ]);
+  });
+
+  it('alan kırılımı Türkçe alfabetik sıralanır, harf farkı aynı alan sayılır', () => {
+    const s = st([civi], [
+      bld('b1', 'A', [['c', 1]], { area: 'Çarşı' }),
+      bld('b2', 'B', [['c', 2]], { area: 'avlu' }),
+      bld('b3', 'C', [['c', 3]], { area: 'AVLU' }),
+      bld('b4', 'D', [['c', 1]], { area: 'Zindan' }),
+    ]);
+    expect(aggregate(s)[0].byArea).toEqual([
+      { area: 'avlu', amount: 5 },
+      { area: 'Çarşı', amount: 1 },
+      { area: 'Zindan', amount: 1 },
+    ]);
   });
 
   it('tamamı yapılmış listede boş döner', () => {

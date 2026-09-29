@@ -1,4 +1,4 @@
-import type { ScanResult, ScannedBuilding, ScannedRequirement } from '../types';
+import type { Box, ScanResult, ScannedBuilding, ScannedRequirement } from '../types';
 
 export class ScanFormatError extends Error {
   constructor(message: string) {
@@ -38,6 +38,20 @@ function toAmount(v: unknown): number {
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+
+function parseBox(v: unknown): Box | null {
+  if (!isObj(v)) return null;
+  const { x, y, w, h } = v;
+  if (![x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n))) return null;
+  const bx = clamp01(x as number);
+  const by = clamp01(y as number);
+  const bw = Math.min(w as number, 1 - bx);
+  const bh = Math.min(h as number, 1 - by);
+  if (bw < 0.005 || bh < 0.005) return null;
+  return { x: bx, y: by, w: bw, h: bh };
+}
+
 function parseRequirement(raw: unknown): ScannedRequirement {
   if (!isObj(raw)) throw new ScanFormatError('Malzeme satırı nesne değil.');
   return {
@@ -45,6 +59,7 @@ function parseRequirement(raw: unknown): ScannedRequirement {
     suggestedName: optString(raw.suggestedName),
     description: optString(raw.description),
     amount: toAmount(raw.amount),
+    box: parseBox(raw.box),
   };
 }
 
@@ -64,5 +79,5 @@ export function parseScanResponse(text: string): ScanResult {
     throw new ScanFormatError('JSON ayrıştırılamadı.');
   }
   if (!isObj(raw) || !Array.isArray(raw.buildings)) throw new ScanFormatError('"buildings" dizisi yok.');
-  return { buildings: raw.buildings.map(parseBuilding) };
+  return { area: optString(raw.area), buildings: raw.buildings.map(parseBuilding) };
 }

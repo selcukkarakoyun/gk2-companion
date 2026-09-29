@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MAX_ZOOM, clampView, cropRect, initialView, outputSize, panBy, rotate, rotatedSize,
+  ICON_MAX, MAX_ZOOM, boxFromPoints, boxToRect, clampView, cropRect, initialView, iconSize, outputSize, panBy, rotate, rotatedSize,
   rotationTransform, zoomAt, type Rotation,
 } from './image-math';
 
@@ -103,5 +103,51 @@ describe('rotationTransform', () => {
     const X = tx + 0 * Math.cos(angle) - 0 * Math.sin(angle);
     const Y = ty + 0 * Math.sin(angle) + 0 * Math.cos(angle);
     expect([Math.round(X), Math.round(Y)]).toEqual([200, 0]);
+  });
+});
+
+describe('boxToRect', () => {
+  it('oranı piksele çevirir', () => {
+    expect(boxToRect({ x: 0.5, y: 0.25, w: 0.1, h: 0.2 }, 200, 100)).toEqual({ x: 100, y: 25, w: 20, h: 20 });
+  });
+  it('görselin dışına taşmaz', () => {
+    const r = boxToRect({ x: 0.95, y: 0.95, w: 0.5, h: 0.5 }, 200, 100);
+    expect(r.x + r.w).toBeLessThanOrEqual(200);
+    expect(r.y + r.h).toBeLessThanOrEqual(100);
+  });
+  it('çok küçük kutuyu en az 1x1 yapar', () => {
+    const r = boxToRect({ x: 0.5, y: 0.5, w: 0.0001, h: 0.0001 }, 200, 100);
+    expect(r.w).toBeGreaterThanOrEqual(1);
+    expect(r.h).toBeGreaterThanOrEqual(1);
+  });
+  it('en sağ alt köşedeki kutuda bile geçerli dikdörtgen verir', () => {
+    const r = boxToRect({ x: 1, y: 1, w: 0.1, h: 0.1 }, 200, 100);
+    expect(r.x).toBeLessThanOrEqual(199);
+    expect(r.y).toBeLessThanOrEqual(99);
+    expect(r.w).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('iconSize', () => {
+  it('uzun kenarı ICON_MAX değerine indirir, oranı korur', () => {
+    expect(iconSize(128, 64)).toEqual({ w: ICON_MAX, h: 32 });
+  });
+  it('küçük kırpmayı büyütmez', () => {
+    expect(iconSize(40, 30)).toEqual({ w: 40, h: 30 });
+  });
+});
+
+describe('boxFromPoints', () => {
+  it('ters sürüklemede sırayı düzeltir', () => {
+    const b = boxFromPoints(0.6, 0.5, 0.2, 0.1);
+    expect(b.x).toBeCloseTo(0.2);
+    expect(b.y).toBeCloseTo(0.1);
+    expect(b.w).toBeCloseTo(0.4);
+    expect(b.h).toBeCloseTo(0.4);
+  });
+  it('0–1 dışını sıkıştırır', () => {
+    const b = boxFromPoints(-0.5, 0.5, 2, 0.9);
+    expect(b.x).toBe(0);
+    expect(b.w).toBe(1);
   });
 });
