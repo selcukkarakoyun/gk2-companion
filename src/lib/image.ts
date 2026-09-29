@@ -72,3 +72,20 @@ export function cropToIcon(bitmap: ImageBitmap, box: Box): string {
   ctx.drawImage(bitmap, r.x, r.y, r.w, r.h, 0, 0, w, h);
   return canvas.toDataURL('image/png');
 }
+
+export async function fileToIcon(file: Blob): Promise<string> {
+  const bitmap = await loadImage(file);
+  try {
+    const { w, h } = iconSize(bitmap.width, bitmap.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas kullanılamıyor.');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    return canvas.toDataURL('image/png');
+  } finally {
+    bitmap.close();
+  }
+}

@@ -3,33 +3,6 @@
   import { store } from '../lib/state.svelte';
 
   const totals = $derived(aggregate(store.state));
-
-  let editingId = $state<string | null>(null);
-  let draftName = $state('');
-  let error = $state<string | null>(null);
-
-  function startEdit(id: string, name: string) {
-    editingId = id;
-    draftName = name;
-    error = null;
-  }
-  function commit() {
-    if (editingId === null) return;
-    const err = store.renameMaterial(editingId, draftName);
-    if (err) {
-      error = err;
-      return;
-    }
-    editingId = null;
-  }
-  function cancel() {
-    editingId = null;
-    error = null;
-  }
-  function onkeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') commit();
-    else if (e.key === 'Escape') cancel();
-  }
 </script>
 
 <section class="window">
@@ -43,43 +16,25 @@
       <ul class="rows">
         {#each totals as t (t.material.id)}
           <li data-testid="total-row" class="panel-row total-row">
-            {#if editingId === t.material.id}
-              <div class="field">
-                <div class="row wrap">
-                  <input type="text" bind:value={draftName} {onkeydown} aria-label="Malzeme adı" />
-                  <button class="primary" onclick={commit}>Kaydet</button>
-                  <button onclick={cancel}>Vazgeç</button>
-                </div>
-                {#if error}<p class="notice error">{error}</p>{/if}
-              </div>
-            {:else}
-              <div class="row between">
-                <div class="grow">
-                  <details>
-                    <summary>
-                      {#if t.material.icon}<img class="slot-icon" src={t.material.icon} alt="" />{/if}
-                      <span class="name name-gold">{t.material.name}</span>
-                      <span class="slot big"><span class="slot-count">{t.total}</span></span>
-                    </summary>
-                    <ul class="sources">
-                      {#each t.sources as s (s.buildingId)}
-                        <li class="muted">{s.area} · {s.buildingName}: {s.amount}</li>
-                      {/each}
-                    </ul>
-                  </details>
-                  <ul class="areas">
-                    {#each t.byArea as a (a.area)}
-                      <li>{a.area} = {a.amount}</li>
-                    {/each}
-                  </ul>
-                </div>
-                <button
-                  class="icon edit"
-                  aria-label="{t.material.name} adını düzenle"
-                  onclick={() => startEdit(t.material.id, t.material.name)}>Düzenle</button
-                >
-              </div>
-            {/if}
+            <div class="grow">
+              <details>
+                <summary>
+                  {#if t.material.icon}<img class="slot-icon" src={t.material.icon} alt="" />{/if}
+                  <span class="name name-gold">{t.material.name}</span>
+                  <span class="slot big"><span class="slot-count">{t.total}</span></span>
+                </summary>
+                <ul class="sources">
+                  {#each t.sources as s (s.buildingId)}
+                    <li class="muted">{s.area} · {s.buildingName}: {s.amount}</li>
+                  {/each}
+                </ul>
+              </details>
+              <ul class="areas">
+                {#each t.byArea as a (a.area)}
+                  <li>{a.area} = {a.amount}</li>
+                {/each}
+              </ul>
+            </div>
           </li>
         {/each}
       </ul>
@@ -100,5 +55,4 @@
   }
   summary .name { flex: 1; }
   .sources { padding: 4px 0 4px 12px; display: grid; gap: 2px; }
-  .edit { font-size: 0.95rem; padding: 0.35rem 0.7rem; }
 </style>

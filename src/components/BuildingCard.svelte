@@ -28,28 +28,29 @@
     </div>
     <button class="danger" onclick={remove}>Sil</button>
   </header>
-  <ul class="slots">
-    {#each building.requirements as r (r.materialId)}
-      {@const m = materialOf(r.materialId)}
-      <li class="slot">
-        {#if m?.icon}<img class="slot-icon" src={m.icon} alt="" />{/if}
-        <span class="slot-name">{m?.name ?? '?'}</span>
-        <span class="slot-count">
-          ×{r.amount}{#if building.qty > 1}<small>= {r.amount * building.qty}</small>{/if}
-        </span>
-      </li>
-    {/each}
-  </ul>
-  <footer class="row end">
+  <div class="body">
+    <ul class="slots">
+      {#each building.requirements as r (r.materialId)}
+        {@const m = materialOf(r.materialId)}
+        <li class="slot">
+          {#if m?.icon}<img class="slot-icon" src={m.icon} alt="" />{/if}
+          <span class="slot-name">{m?.name ?? '?'}</span>
+          <span class="slot-count">
+            ×{r.amount}{#if building.qty > 1}<small>= {r.amount * building.qty}</small>{/if}
+          </span>
+        </li>
+      {/each}
+    </ul>
     <label class="check">
       <input type="checkbox" checked={building.built} onchange={() => store.toggleBuilt(building.id)} />
       Yapıldı
     </label>
-  </footer>
+  </div>
 </article>
 
 <style>
   .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .header-stepper { margin-inline-end: 24px; }
-  .end { justify-content: flex-end; }
+  .body { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
+  .body .slots { flex: 1; min-width: 0; }
 </style>

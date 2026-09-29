@@ -119,20 +119,41 @@ test('tara, incele, listele, adedi artır, tekrar tara, yenile', async ({ page }
   await expect(page.locator('article.building')).toHaveCount(5);
 });
 
-test('malzemeyi yeniden adlandırma çakışmada reddedilir, geçerli isim kalır', async ({ page }) => {
+test('Tüm Eşyalar: yeniden adlandırma çakışmada reddedilir, geçerli isim kalır', async ({ page }) => {
   await page.goto('/');
   await scanSample(page);
   await page.getByRole('button', { name: 'Listeye ekle' }).click();
-  await page.getByRole('button', { name: 'Toplam' }).click();
+  await page.getByRole('button', { name: 'Ayarlar' }).click();
 
-  await page.getByRole('button', { name: 'Tahta adını düzenle' }).click();
-  await page.getByLabel('Malzeme adı').fill('ÇİVİ');
-  await page.getByRole('button', { name: 'Kaydet' }).click();
+  const nameInput = page.getByLabel('Tahta adı');
+  await nameInput.fill('ÇİVİ');
+  await nameInput.blur();
   await expect(page.getByText('başka bir malzemede kullanılıyor')).toBeVisible();
 
-  await page.getByLabel('Malzeme adı').fill('Kalın Tahta');
-  await page.getByRole('button', { name: 'Kaydet' }).click();
+  await nameInput.fill('Kalın Tahta');
+  await nameInput.blur();
+  await expect(page.getByText('başka bir malzemede kullanılıyor')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Toplam' }).click();
   await expectTotal(page, 'Kalın Tahta', 16);
+});
+
+test('Tüm Eşyalar: görsel yüklenir ve kaldırılır', async ({ page }) => {
+  await page.goto('/');
+  await scanSample(page);
+  await page.getByRole('button', { name: 'Listeye ekle' }).click();
+  await page.getByRole('button', { name: 'Ayarlar' }).click();
+
+  // 1x1 kırmızı PNG
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  await page.getByLabel('Çivi için görsel yükle').setInputFiles({ name: 'civi.png', mimeType: 'image/png', buffer: png });
+  await expect(page.getByAltText('Çivi ikonu')).toHaveAttribute('src', /^data:image\/png;base64,/);
+  expect((await stateOf(page)).materials.find((m: { name: string }) => m.name === 'Çivi').icon).toMatch(/^data:image\/png/);
+
+  await page.getByRole('button', { name: 'Çivi görselini kaldır' }).click();
+  await expect(page.getByAltText('Çivi ikonu')).toHaveCount(0);
 });
 
 test('API anahtarı yokken tarama Ayarlar yönlendirmesi gösterir', async ({ page }) => {
