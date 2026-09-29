@@ -1,5 +1,6 @@
 <script lang="ts">
   import BuildingsView from './components/BuildingsView.svelte';
+  import ScanFlow from './components/ScanFlow.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import Tabs from './components/Tabs.svelte';
   import TotalView from './components/TotalView.svelte';
@@ -33,3 +34,14 @@
     {/if}
   </main>
 </div>
+
+{#if scanFile}
+  <ScanFlow
+    file={scanFile}
+    onclose={() => (scanFile = null)}
+    onopensettings={() => {
+      scanFile = null;
+      tab = 'settings';
+    }}
+  />
+{/if}
