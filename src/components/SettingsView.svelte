@@ -1,0 +1,89 @@
+<script lang="ts">
+  import { store } from '../lib/state.svelte';
+  import { parseImport } from '../lib/storage';
+
+  let showKey = $state(false);
+  let message = $state<{ kind: 'ok' | 'error'; text: string } | null>(null);
+
+  function exportFile() {
+    const blob = new Blob([store.exportJson()], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gk2-companion-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importFile(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try {
+      const parsed = parseImport(await file.text());
+      if (!confirm('Mevcut liste, içe aktarılan dosyayla değiştirilecek. Devam edilsin mi?')) return;
+      store.replaceState(parsed);
+      message = { kind: 'ok', text: 'Veriler içe aktarıldı.' };
+    } catch (err) {
+      message = { kind: 'error', text: err instanceof Error ? err.message : 'İçe aktarılamadı.' };
+    }
+  }
+</script>
+
+<section class="card">
+  <h2>Yapay zeka</h2>
+  <div class="field">
+    <label for="apikey">DeepSeek API anahtarı</label>
+    <div class="row">
+      <input
+        id="apikey"
+        type={showKey ? 'text' : 'password'}
+        autocomplete="off"
+        spellcheck="false"
+        value={store.settings.apiKey}
+        oninput={(e) => store.setSettings({ apiKey: e.currentTarget.value })}
+      />
+      <button onclick={() => (showKey = !showKey)}>{showKey ? 'Gizle' : 'Göster'}</button>
+    </div>
+    <p class="muted">Anahtar yalnızca bu cihazda saklanır ve sadece api.deepseek.com'a gönderilir.</p>
+  </div>
+  <div class="field">
+    <label for="model">Model adı</label>
+    <input
+      id="model"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      value={store.settings.model}
+      oninput={(e) => store.setSettings({ model: e.currentTarget.value })}
+    />
+  </div>
+</section>
+
+<section class="card">
+  <h2>Veriler</h2>
+  <p class="muted">Yedek dosyası yapıları ve malzemeleri içerir; API anahtarını içermez.</p>
+  <div class="row wrap">
+    <button onclick={exportFile}>Dışa aktar (JSON)</button>
+    <label class="import">
+      <span class="btn">İçe aktar (JSON)</span>
+      <input type="file" accept="application/json,.json" hidden onchange={importFile} />
+    </label>
+  </div>
+  {#if message}<p class={['notice', message.kind]}>{message.text}</p>{/if}
+</section>
+
+<style>
+  .import { cursor: pointer; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.55rem 0.9rem;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .import:hover .btn { border-color: var(--accent); }
+</style>
